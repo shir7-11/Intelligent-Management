@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Dept. Work Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 🟢 字体与配色优化 */
+        :root { 
+            --primary: #2c3e50; 
+            --accent: #3498db; 
+            --success: #27ae60; 
+            --warning: #f39c12; 
+            --danger: #c0392b; 
+            --bg: #f4f6f9; 
+            --white: #ffffff; 
+            /* 使用更现代、清晰的字体组合 */
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+        }
+        
+        body { 
+            font-family: var(--font-stack); 
+            background: var(--bg); 
+            color: #333; 
+            margin: 0; 
+            padding: 20px; 
+            font-size: 13px; /* 基础字号微调 */
+            line-height: 1.5;
+        }
+        
+        .container { max-width: 99%; margin: 0 auto; display: none; }
+        
+        /* Header 还原为紧凑型 */
+        header { background: var(--white); padding: 12px 20px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; border-top: 3px solid var(--accent); }
+        .brand h1 { margin: 0; font-size: 18px; color: var(--primary); font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+        
+        .view-switcher { display: flex; background: #eee; padding: 2px; border-radius: 4px; }
+        .view-btn { padding: 5px 12px; border: none; background: transparent; cursor: pointer; font-size: 12px; border-radius: 3px; color: #666; font-weight: 600; font-family: var(--font-stack); transition: 0.2s; }
+        .view-btn.active { background: var(--white); color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        select, input.search { padding: 6px 10px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; outline: none; font-family: var(--font-stack); }
+        select:focus, input.search:focus { border-color: var(--accent); }
+        input.search { width: 140px; }
+        
+        .btn { padding: 6px 14px; border: none; border-radius: 3px; cursor: pointer; color: white; font-size: 12px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-stack); }
+        .btn:hover { opacity: 0.9; }
+        .btn-add { background: var(--accent); } 
+        .btn-export { background: #27ae60; } 
+        .btn-refresh { background: #7f8c8d; } 
+        .btn-config { background: #34495e; } 
+        
+        .action-group { display: flex; gap: 4px; }
+        .btn-edit { background: #f39c12; padding: 3px 8px; font-size: 11px; color:white; border-radius: 2px; border:none; cursor:pointer;}
+        .btn-del { background: #e74c3c; padding: 3px 8px; font-size: 11px; color:white; border-radius: 2px; border:none; cursor:pointer;}
+
+        #listView, #dashboardView, #kanbanView, #schedulerView { display: none; animation: fadeIn 0.2s ease; }
+        .show-view { display: block !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 表格样式：更清晰的边框和间距 */
+        .table-box { background: var(--white); border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #e0e0e0; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        thead { background: #f8f9fa; }
+        th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #e9ecef; color: #495057; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; font-family: var(--font-stack); }
+        td { padding: 10px 12px; border-bottom: 1px solid #f1f3f5; font-size: 13px; vertical-align: middle; color: #333; }
+        tr:hover td { background-color: #f8f9fa; }
+        
+        /* 标签微调 */
+        .tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-right: 4px; margin-bottom: 2px; font-weight: 600; font-family: var(--font-stack); }
+        .tag-loc { background: #e3f2fd; color: #1565c0; font-weight: normal; }
+        .tag-person { background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; font-weight: normal; }
+        
+        .tag-weekend { background: #fff3e0; color: #e67e22; border: 1px solid #ffe0b2; }
+        .tag-holiday { background: #ffebee; color: #c0392b; border: 1px solid #ffcdd2; }
+        .tag-duration { background: #9b59b6; color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 5px; }
+
+        .tag-type { font-weight: bold; border-radius: 3px; padding: 2px 6px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+        .tag-pm { background: #e0f7fa; color: #006064; border: 1px solid #b2ebf2; }
+        .tag-project { background: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; }
+        .tag-adhoc { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+
+        .pagination { display: flex; justify-content: flex-end; align-items: center; padding: 10px 15px; gap: 10px; background: #fafafa; border-top: 1px solid #eee; }
+        .page-btn { padding: 4px 10px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 3px; font-size: 12px; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 12px; color: #666; }
+
+        /* 排程视图 (Excel风格) */
+        .scheduler-table th, .scheduler-table td { border: 1px solid #ccc; text-align: center; padding: 4px; height: 45px; vertical-align: top; }
+        .scheduler-table th { background: #34495e; color: white; position: sticky; top: 0; z-index: 10; font-size: 12px; font-weight: normal; }
+        .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #999; width: 90px; font-weight: bold; vertical-align: middle; color: #333; }
+        .scheduler-table .col-weekend { background-color: #fdf2f2; }
+        
+        .sch-task { background: #fff; border-left: 3px solid #3498db; margin-bottom: 2px; padding: 2px 4px; font-size: 11px; text-align: left; border-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); cursor:pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .sch-task:hover { z-index: 100; position: relative; width: auto; min-width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .sch-task-pm { border-left-color: #00bcd4; }
+        .sch-task-adhoc { border-left-color: #ff9800; }
+
+        /* 看板 */
+        .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; height: calc(100vh - 140px); overflow-x: auto; } 
+        .kanban-col { background: #ebecf0; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; min-width: 260px; }
+        .kanban-header { font-weight: bold; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #dcdcdc; display: flex; justify-content: space-between; align-items: center; color: #555; font-size: 13px; }
+        .kanban-count { background: #ccc; border-radius: 10px; padding: 1px 6px; font-size: 11px; color: #333; }
+        .kanban-list { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 100px; }
+        .kanban-card { background: white; border-radius: 4px; padding: 10px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: grab; border-left: 3px solid #ccc; transition: transform 0.1s; }
+        .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        
+        .card-Planned { border-left-color: var(--accent); }
+        .card-InProgress { border-left-color: var(--warning); }
+        .card-Done { border-left-color: var(--success); opacity: 0.8; }
+        .card-Overdue { border-left-color: var(--danger); background: #fffcfc; }
+
+        .k-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; color: #2c3e50; }
+        .k-meta { font-size: 11px; color: #777; margin-bottom: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .k-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #eee; }
+        .k-person { font-size: 11px; background: #f8f9fa; padding: 2px 5px; border-radius: 3px; color: #555; border:1px solid #eee; }
+        .kanban-col.drag-over { background: #dcdfe4; border: 2px dashed #aaa; }
+
+        /* 仪表盘 */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .kpi-card { background: white; padding: 15px 20px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--accent); }
+        .kpi-info p { margin: 0 0 5px 0; font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-info h3 { margin: 0; font-size: 24px; color: #2c3e50; font-weight: 700; }
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .chart-box { background: white; padding: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .chart-header h4 { margin: 0; font-size: 14px; color: var(--primary); font-weight: 700; }
+
+        /* 弹窗 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: #fff; width: 500px; margin: 5% auto; padding: 25px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .form-row { display: flex; gap: 15px; } 
+        .form-group { margin-bottom: 12px; flex: 1; }
+        .form-group label { display: block; font-weight: 700; font-size: 12px; margin-bottom: 5px; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px; box-sizing: border-box; font-family: var(--font-stack); font-size: 13px; }
+        .form-group input:focus { border-color: var(--accent); }
+        #syncStatus { font-size: 12px; color: #888; margin-left: 10px; }
+        
+        @media (max-width: 768px) {
+            .kanban-board { grid-template-columns: 1fr; height: auto; overflow-y: auto; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .charts-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#2c3e50;z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;color:white;">
+    <h2>👋 欢迎 / Welcome</h2>
+    <p style="margin-bottom:15px;opacity:0.8;">请输入您的姓名以进行访问登记</p>
+    <div style="display:flex;gap:10px;">
+        <input type="text" id="loginName" placeholder="例如: 张三 / Tom" style="padding:10px;border-radius:4px;border:none;width:200px;font-family:inherit;">
+        <button onclick="checkLogin()" style="padding:10px 20px;background:#3498db;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">进入系统</button>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <header>
+        <div class="brand">
+            <h1>CS Dept. WorkOS <small style="font-size:12px; color:#7f8c8d; font-weight:normal; margin-left:10px;">Intelligent Management</small></h1>
+        </div>
+        <div class="view-switcher">
+            <button class="view-btn active" onclick="switchView('list')">📋 列表 List</button>
+            <button class="view-btn" onclick="switchView('scheduler')">📅 排程 Scheduler</button>
+            <button class="view-btn" onclick="switchView('kanban')">🏗️ 看板 Kanban</button>
+            <button class="view-btn" onclick="switchView('dashboard')">📊 报表 Dashboard</button>
+        </div>
+        <div class="controls">
+            <span style="font-size:12px;color:#2c3e50;font-weight:bold;margin-right:10px;">👤 <span id="displayUser">Guest</span></span>
+            <span id="syncStatus">🔄 准备就绪</span>
+            <div id="listControls" style="display:flex; gap:8px;">
+                <div id="schedulerControls" style="display:none;">
+                    <input type="month" id="schMonth" onchange="renderScheduler()" style="padding:6px;border:1px solid #ddd;border-radius:3px;">
+                </div>
+                <div id="commonControls" style="display:flex; gap:8px;">
+                    <select id="typeFilter" onchange="refreshView()">
+                        <option value="">📂 所有类型</option>
+                        <option value="PM">🛠️ PM (预防维护)</option>
+                        <option value="Project">🚧 Project (施工改造)</option>
+                        <option value="Adhoc">⚡ Adhoc (临时抢修)</option>
+                    </select>
+                    <select id="locFilter" onchange="refreshView()"><option value="">📍 所有地点</option></select>
+                    <select id="personFilter" onchange="refreshView()"><option value="">👤 所有人员</option></select>
+                    <input type="text" class="search" id="searchInput" placeholder="🔍 Search..." onkeyup="refreshView()">
+                </div>
+            </div>
+            <button class="btn btn-export" onclick="exportToCSV()">📥 Export</button>
+            <button class="btn btn-add" onclick="openModal()">+ Add</button>
+            <button class="btn btn-refresh" onclick="fetchData()">↻</button>
+            <button class="btn btn-config" onclick="openConfigModal()">⚙️</button>
+        </div>
+    </header>
+
+    <div id="listView" class="show-view">
+        <div class="table-box">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th width="18%">日期 Date (Start/End)</th>
+                        <th width="8%">类型 Type</th>
+                        <th width="10%">地点 Location</th>
+                        <th width="20%">事件 Event</th>
+                        <th width="10%">工具 Tools</th>
+                        <th width="15%">备注 Remarks</th>
+                        <th width="10%">人员 Person</th>
+                        <th width="8%">状态 Status</th>
+                        <th width="10%">操作 Action</th>
+                    </tr>
+                </thead>
+                <tbody id="listBody"><tr><td colspan="9" style="text-align:center; padding:30px; color:#999;">正在加载数据...</td></tr></tbody>
+            </table>
+            <div class="pagination">
+                <span class="page-info" id="pageInfo">Showing 0-0 of 0</span>
+                <button class="page-btn" onclick="changePage(-1)" id="prevBtn">Previous</button>
+                <button class="page-btn" onclick="changePage(1)" id="nextBtn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="schedulerView">
+        <div class="table-box" style="height:calc(100vh - 140px); overflow:auto;">
+            <table class="scheduler-table" id="schedulerTable"></table>
+        </div>
+    </div>
+
+    <div id="kanbanView">
+        <div class="kanban-board">
+            <div class="kanban-col"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div></div>
+            <div class="kanban-col"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div></div>
+            <div class="kanban-col"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div></div>
+            <div class="kanban-col"><div class="kanban-header" style="color:#c0392b"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div></div>
+        </div>
+    </div>
+
+    <div id="dashboardView">
+        <div class="dashboard-grid">
+            <div class="kpi-card" style="border-left-color: #3498db;"><div class="kpi-info"><p>Today's Tasks</p><h3 id="kpi-today">0</h3></div><div class="kpi-icon">📅</div></div>
+            <div class="kpi-card" style="border-left-color: #e74c3c;"><div class="kpi-info"><p style="color:#c0392b; font-weight:bold;">⚠️ Overdue</p><h3 id="kpi-overdue" style="color:#c0392b">0</h3></div><div class="kpi-icon">🔥</div></div>
+            <div class="kpi-card" style="border-left-color: #f39c12;"><div class="kpi-info"><p>Pending</p><h3 id="kpi-progress">0</h3></div><div class="kpi-icon">⏳</div></div>
+            <div class="kpi-card" style="border-left-color: #27ae60;"><div class="kpi-info"><p>Total Done</p><h3 id="kpi-done">0</h3></div><div class="kpi-icon">✅</div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box"><div class="chart-header"><h4>🏭 工作类型 (Work Type)</h4></div><div style="height: 250px;"><canvas id="chartType"></canvas></div></div>
+            <div class="chart-box"><div class="chart-header"><h4>💿 任务状态 (Status)</h4></div><div style="height: 250px;"><canvas id="chartStatus"></canvas></div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box"><div class="chart-header"><h4>👥 忙碌人员 (Top Workload)</h4></div><div style="height: 250px;"><canvas id="chartPerson"></canvas></div></div>
+            <div class="chart-box"><div class="chart-header"><h4>📍 热门地点 (Top Locations)</h4></div><div style="height: 250px;"><canvas id="chartLoc"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:var(--primary); font-weight:700;">工作任务 / Task</h3>
+        <input type="hidden" id="editIndex">
+        <div class="form-row">
+            <div class="form-group">
+                <label>工作类型</label>
+                <select id="inType">
+                    <option value="PM">🛠️ PM (预防维护)</option>
+                    <option value="Project">🚧 Project (施工改造)</option>
+                    <option value="Adhoc">⚡ Adhoc (临时抢修)</option>
+                </select>
+            </div>
+            <div class="form-group"><label>时间 (HH:MM)</label><input type="text" id="inTime" placeholder="例如: 14:00"></div>
+        </div>
+        <div class="form-row" style="background:#f8f9fa; padding:10px; border-radius:4px; border:1px dashed #ddd;">
+            <div class="form-group"><label>开始日期 (Start Date)</label><input type="text" id="inDate" placeholder="YYYY-MM-DD"></div>
+            <div class="form-group"><label>结束日期 (End Date - 选填)</label><input type="text" id="inEndDate" placeholder="YYYY-MM-DD"></div>
+        </div>
+        <div class="form-group"><label>地点</label><input type="text" id="inLoc"></div>
+        <div class="form-group"><label>事件内容</label><input type="text" id="inEvent"></div>
+        <div class="form-row">
+            <div class="form-group"><label>所需工具</label><input type="text" id="inTools"></div>
+            <div class="form-group"><label>备注/结果</label><input type="text" id="inRemarks"></div>
+        </div>
+        <div class="form-group"><label>人员 (逗号分隔)</label><input type="text" id="inPerson"></div>
+        <div class="form-group">
+            <label>状态</label>
+            <select id="inStatus">
+                <option value="Planned">Planned (蓝色)</option>
+                <option value="InProgress">In Progress (橙色)</option>
+                <option value="Done">Done (绿色)</option>
+                <option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (过期 - 红色)</option>
+            </select>
+        </div>
+        <div style="text-align:right; margin-top:20px;">
+            <button class="btn" style="background:#ddd; color:#333" onclick="closeModal()">取消</button>
+            <button class="btn btn-add" onclick="saveData()">保存云端</button>
+        </div>
+    </div>
+</div>
+
+<div id="configModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0">⚙️ 配置</h3>
+        <div class="form-group"><label>Bin ID</label><input type="text" id="cfgBinId"></div>
+        <div class="form-group"><label>API Key</label><input type="password" id="cfgApiKey"></div>
+        <div style="text-align:right; margin-top:20px;">
+            <button class="btn" style="background:#ddd; color:#333" onclick="closeConfigModal()">取消</button>
+            <button class="btn btn-add" onclick="saveConfig()">保存 (Save)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🟢 您的 Master Key 配置
+    const REAL_BIN_ID = '692fd71bd0ea881f400f60b1';    
+    const REAL_API_KEY = '$2a$10$qAHKdzsubRL5MD0cXJEm4OGuw68I0Ce7iVHGDyEj9FdPv5FFOIQ6q'; 
+    
+    // 强制修正逻辑
+    if (localStorage.getItem('cs_work_api_key') !== REAL_API_KEY) {
+        localStorage.setItem('cs_work_api_key', REAL_API_KEY);
+        localStorage.setItem('cs_work_bin_id', REAL_BIN_ID);
+    }
+
+    let BIN_ID = localStorage.getItem('cs_work_bin_id') || REAL_BIN_ID; 
+    let API_KEY = localStorage.getItem('cs_work_api_key') || REAL_API_KEY;
+    let API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    const HOLIDAYS = ['2025-01-01', '2025-01-28', '2025-01-29', '2025-01-30', '2025-01-31', '2025-02-01', '2025-04-04', '2025-05-01', '2025-10-01'];
+    let workData = []; let isEditing = false; let chartInstances = {};
+    let currentPage = 1; const itemsPerPage = 12;
+    let currentUser = "Guest";
+
+    function checkLogin() {
+        const input = document.getElementById('loginName').value.trim();
+        if(input.length > 0) {
+            currentUser = input;
+            sessionStorage.setItem('current_user', currentUser); 
+            document.getElementById('displayUser').innerText = currentUser;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            if(checkConfig()) fetchData();
+            else openConfigModal();
+        } else {
+            alert("请填写您的姓名");
+        }
+    }
+
+    if(sessionStorage.getItem('current_user')) {
+        currentUser = sessionStorage.getItem('current_user');
+        document.getElementById('displayUser').innerText = currentUser;
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        if(checkConfig()) fetchData();
+    }
+
+    function normalizeDateStr(dateStr) {
+        if (!dateStr) return '';
+        let s = dateStr.trim();
+        const currentYear = new Date().getFullYear();
+        if (s.includes('月')) {
+            s = s.replace(/日/g, '').replace(/月/g, '/');
+            if (!s.includes('年')) s = currentYear + '/' + s; 
+            else s = s.replace(/年/g, '/');
+        } else { s = s.replace(/-/g, '/'); }
+        const parts = s.split('/');
+        if(parts.length === 2) s = currentYear + '/' + s;
+        const d = new Date(s);
+        if(isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function getDateDisplay(start, end) {
+        const s = normalizeDateStr(start);
+        const e = normalizeDateStr(end);
+        if (!s) return { html: '', raw: '' };
+        
+        const dateObj = new Date(s.replace(/-/g, '/'));
+        const day = dateObj.getDay();
+        let badge = '';
+        
+        if (HOLIDAYS.includes(s)) badge = `<span class="tag tag-holiday">🧧 节假日</span>`;
+        else if (day === 0 || day === 6) badge = `<span class="tag tag-weekend">🏖️ 周末</span>`;
+
+        let html = `<div>${badge} <b style="font-size:14px;color:#2c3e50">${s}</b></div>`;
+        
+        if (e && e !== s) {
+            const d1 = new Date(s);
+            const d2 = new Date(e);
+            const diffTime = Math.abs(d2 - d1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            html += `<div style="margin-top:4px; font-size:12px; color:#666;">
+                        <span>⬇️ 至 ${e}</span>
+                        <span class="tag tag-duration">🕒 ${diffDays}天</span>
+                     </div>`;
+        }
+        return { html: html, raw: s };
+    }
+
+    const today = new Date();
+    document.getElementById('schMonth').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+
+    setInterval(() => { if(document.getElementById('mainApp').style.display === 'block' && BIN_ID && API_KEY && !isEditing) fetchData(); }, 60000); 
+
+    function checkConfig() {
+        if (!BIN_ID || !API_KEY) { updateStatus('⚠️ 未配置'); return false; }
+        return true;
+    }
+
+    function switchView(viewName) {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.view-btn[onclick*="${viewName}"]`).classList.add('active');
+        ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => document.getElementById(id).classList.remove('show-view'));
+        document.getElementById(viewName + 'View').classList.add('show-view');
+        
+        const schCtrl = document.getElementById('schedulerControls');
+        const comCtrl = document.getElementById('commonControls');
+        if(viewName === 'scheduler') {
+            schCtrl.style.display = 'block'; comCtrl.style.display = 'none'; renderScheduler();
+        } else {
+            schCtrl.style.display = 'none'; comCtrl.style.display = 'flex';
+            if(viewName === 'kanban') renderKanban();
+            if(viewName === 'dashboard') renderDashboard();
+            if(viewName === 'list') renderTable();
+        }
+    }
+
+    async function fetchData() {
+        if(isEditing) return; 
+        updateStatus('🔄 同步中...');
+        try {
+            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
+            if(!res.ok) throw new Error("连接失败(401/403)");
+            const json = await res.json();
+            if (json.record && Array.isArray(json.record.tasks)) { workData = json.record.tasks; }
+            else if (json.tasks && Array.isArray(json.tasks)) { workData = json.tasks; }
+            else { workData = []; }
+            
+            await checkAndAutoFinishPastTasks();
+            if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler();
+            else refreshView();
+            updateStatus('✅ 已同步');
+        } catch (e) { updateStatus('❌ ' + e.message); }
+    }
+
+    async function checkAndAutoFinishPastTasks() {
+        let changed = false;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        workData.forEach(task => {
+            const deadline = normalizeDateStr(task.endDate || task.date);
+            if (deadline && deadline < todayStr && task.status !== 'Done' && task.status !== 'Overdue') {
+                task.status = 'Overdue'; changed = true;
+            }
+        });
+        if(changed) {
+            try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); } catch(e) {}
+        }
+    }
+
+    function refreshView() {
+        currentPage = 1;
+        if(document.getElementById('listView').classList.contains('show-view')) renderTable();
+        if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban();
+        if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard();
+    }
+
+    function getFilteredData() {
+        const search = document.getElementById('searchInput').value.toUpperCase();
+        const locFilter = document.getElementById('locFilter').value;
+        const personFilter = document.getElementById('personFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        let mapped = workData.map((item, idx) => ({ ...item, _id: idx }));
+        let filtered = mapped.filter(item => {
+            const str = (item.event+item.location+item.person+item.date+(item.tools||"")+(item.remarks||"")).toUpperCase();
+            return str.includes(search) && 
+                   (locFilter === "" || item.location === locFilter) &&
+                   (personFilter === "" || item.person.includes(personFilter)) &&
+                   (typeFilter === "" || item.type === typeFilter);
+        });
+        filtered.sort((a, b) => {
+            const d1Str = normalizeDateStr(a.date) || '2099-12-31';
+            const d2Str = normalizeDateStr(b.date) || '2099-12-31';
+            if (d1Str !== d2Str) return d1Str.localeCompare(d2Str);
+            const t1 = (a.time || '00:00').split('-')[0].trim();
+            const t2 = (b.time || '00:00').split('-')[0].trim();
+            return t1.localeCompare(t2);
+        });
+        return filtered;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('listBody');
+        const filtered = getFilteredData();
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+        if(currentPage > totalPages) currentPage = totalPages;
+        const startIdx = (currentPage - 1) * itemsPerPage;
+        const endIdx = startIdx + itemsPerPage;
+        const pageData = filtered.slice(startIdx, endIdx);
+
+        document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(endIdx, totalItems)} of ${totalItems}`;
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+        tbody.innerHTML = '';
+        if(pageData.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#999">暂无数据</td></tr>'; return; }
+        
+        pageData.forEach(item => {
+            let color = '#3498db';
+            if(item.status === 'Done') color = 'green';
+            else if(item.status === 'InProgress') color = 'orange';
+            else if(item.status === 'Overdue') color = '#c0392b';
+
+            let persons = item.person ? item.person.split(/,|，/).map(p => `<span class="tag tag-person">${p.trim()}</span>`).join('') : '';
+            const dateDisplay = getDateDisplay(item.date, item.endDate);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="line-height:1.6">${dateDisplay.html}<br><span style="color:#888;font-size:12px">${item.time||''}</span></td>
+                    <td>${item.type === 'PM' ? '<span class="tag tag-type tag-pm">🛠️ PM</span>' : (item.type === 'Project' ? '<span class="tag tag-type tag-project">🚧 施工</span>' : '<span class="tag tag-type tag-adhoc">⚡ 抢修</span>')}</td>
+                    <td><span class="tag tag-loc">${item.location}</span></td>
+                    <td style="font-weight:500">${item.event}</td>
+                    <td style="color:#555">${item.tools || '-'}</td>
+                    <td style="color:#555; font-style:italic">${item.remarks || '-'}</td>
+                    <td>${persons}</td>
+                    <td><span style="color:${color};font-weight:bold">● ${item.status}</span></td>
+                    <td><div class="action-group"><button class="btn btn-edit" onclick="editItem(${item._id})">Edit</button><button class="btn btn-del" onclick="delItem(${item._id})">Del</button></div></td>
+                </tr>`;
+        });
+    }
+
+    function changePage(delta) { currentPage += delta; renderTable(); }
+
+    function exportToCSV() {
+        const filtered = getFilteredData();
+        if(filtered.length === 0) return alert("没有数据可导出");
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+        csvContent += "Type,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n";
+        filtered.forEach(row => {
+            const rowStr = [
+                row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', 
+                `"${(row.event || '').replace(/"/g, '""')}"`, 
+                `"${(row.tools || '').replace(/"/g, '""')}"`,
+                `"${(row.remarks || '').replace(/"/g, '""')}"`,
+                `"${(row.person || '').replace(/"/g, '""')}"`,
+                row.status || ''
+            ].join(",");
+            csvContent += rowStr + "\n";
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `CS_Work_Export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function renderKanban() {
+        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { 
+            document.getElementById(`col-${s}`).innerHTML=''; 
+            document.getElementById(`count-${s}`).innerText='0'; 
+        });
+        const filtered = getFilteredData();
+        let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
+        filtered.forEach(item => {
+            const status = item.status || 'Planned';
+            if(counts.hasOwnProperty(status)) counts[status]++; else counts['Planned']++; 
+            const dateDisplay = getDateDisplay(item.date, item.endDate);
+            const persons = item.person ? item.person.split(/,|，/).map(p => p.trim()).join(', ') : '';
+            let dateStr = dateDisplay.raw;
+            if(item.endDate && item.endDate !== item.date) dateStr += ` ➜ ${normalizeDateStr(item.endDate)}`;
+            const card = document.createElement('div');
+            card.className = `kanban-card card-${status}`; card.draggable = true; card.setAttribute('ondragstart', `drag(event, ${item._id})`);
+            card.innerHTML = `<div class="k-title">${item.event}</div><div class="k-meta"><span>📅 ${dateStr}</span><span>📍 ${item.location}</span></div><div style="font-size:12px; color:#666; margin-bottom:5px;">${item.remarks || ''}</div><div class="k-footer"><span class="k-person">👤 ${persons}</span><button class="btn-edit" style="border:none; cursor:pointer;" onclick="editItem(${item._id})">✎</button></div>`;
+            if(document.getElementById(`col-${status}`)) document.getElementById(`col-${status}`).appendChild(card);
+            else document.getElementById(`col-Planned`).appendChild(card);
+        });
+        for(let k in counts) document.getElementById(`count-${k}`).innerText = counts[k];
+    }
+
+    function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+    function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
+    function drag(ev, id) { ev.dataTransfer.setData("text", id); }
+    async function drop(ev, newStatus) {
+        ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+        var taskId = ev.dataTransfer.getData("text");
+        if (workData[taskId] && workData[taskId].status !== newStatus) {
+            workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...');
+            try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); updateStatus('✅ 已更新'); } 
+            catch(e) { updateStatus('❌ 失败'); }
+        }
+    }
+
+    async function saveData() {
+        const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true;
+        try {
+            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
+            if(!res.ok) throw new Error("Err");
+            const json = await res.json();
+            let latestTasks = json.record.tasks || [];
+            const idx = document.getElementById('editIndex').value;
+            const task = { 
+                type: document.getElementById('inType').value,
+                date: document.getElementById('inDate').value,
+                endDate: document.getElementById('inEndDate').value, 
+                time: document.getElementById('inTime').value, 
+                location: document.getElementById('inLoc').value, 
+                event: document.getElementById('inEvent').value, 
+                person: document.getElementById('inPerson').value, 
+                status: document.getElementById('inStatus').value, 
+                tools: document.getElementById('inTools').value, 
+                remarks: document.getElementById('inRemarks').value 
+            };
+            if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task;
+            workData = latestTasks;
+            await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) });
+            closeModal(); refreshView(); updateStatus('✅ 保存成功');
+        } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; }
+    }
+
+    async function delItem(idx) {
+        if(!confirm("删除?")) return;
+        try {
+            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
+            const json = await res.json();
+            let tasks = json.record.tasks || [];
+            if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); refreshView(); updateStatus('✅ 删除成功'); }
+        } catch (e) { alert("删除失败"); }
+    }
+
+    function renderScheduler() {
+        const table = document.getElementById('schedulerTable');
+        table.innerHTML = '';
+        const monthVal = document.getElementById('schMonth').value; 
+        if(!monthVal) return;
+        const [year, month] = monthVal.split('-').map(Number);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        let thead = '<thead><tr><th class="col-person" style="background:#2c3e50;color:white;z-index:20">人员 / Date</th>';
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateObj = new Date(year, month-1, d);
+            const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isHoliday = HOLIDAYS.includes(dateStr);
+            let bg = '#2c3e50';
+            if (isHoliday) bg = '#c0392b'; 
+            else if (isWeekend) bg = '#e67e22';
+            thead += `<th style="background:${bg}; color:white; min-width:40px;">${d}</th>`;
+        }
+        thead += '</tr></thead>';
+        table.innerHTML += thead;
+
+        let people = new Set();
+        workData.forEach(t => { if(t.person) t.person.split(/,|，/).forEach(p => people.add(p.trim())); });
+        const personList = Array.from(people).sort();
+
+        let tbody = '<tbody>';
+        personList.forEach(p => {
+            if(!p) return;
+            tbody += `<tr><td class="col-person">${p}</td>`;
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateObj = new Date(year, month-1, d);
+                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                
+                const tasks = workData.filter(t => {
+                    const hasPerson = t.person && t.person.includes(p);
+                    const start = normalizeDateStr(t.date);
+                    const end = normalizeDateStr(t.endDate) || start;
+                    return hasPerson && cellDateStr >= start && cellDateStr <= end;
+                });
+
+                let content = '';
+                tasks.forEach(t => {
+                    let typeClass = t.type==='PM'?'sch-task-pm':(t.type==='Adhoc'?'sch-task-adhoc':'');
+                    content += `<div class="sch-task ${typeClass}" onclick="editItem(${t._id})"><span class="sch-task-text">${t.event}</span></div>`;
+                });
+                tbody += `<td class="${isWeekend?'col-weekend':''}">${content}</td>`;
+            }
+            tbody += '</tr>';
+        });
+        tbody += '</tbody>';
+        table.innerHTML += tbody;
+    }
+
+    function renderDashboard() {
+        const total = workData.length;
+        const done = workData.filter(i => i.status === 'Done').length;
+        const inProgress = workData.filter(i => i.status === 'InProgress').length;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        let overdueCount = 0;
+        let todayCount = 0;
+
+        workData.forEach(task => {
+            const dateStr = normalizeDateStr(task.date);
+            if(dateStr) {
+                if(dateStr === todayStr) todayCount++;
+                if(task.status === 'Overdue' || (dateStr < todayStr && task.status !== 'Done')) overdueCount++;
+            }
+        });
+
+        document.getElementById('kpi-today').innerText = todayCount;
+        document.getElementById('kpi-overdue').innerText = overdueCount;
+        document.getElementById('kpi-progress').innerText = inProgress;
+        document.getElementById('kpi-done').innerText = done;
+
+        let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 };
+        let personMap = {}, locMap = {};
+        workData.forEach(t => {
+            let tType = t.type || 'Other';
+            if(typeMap.hasOwnProperty(tType)) typeMap[tType]++; else typeMap['Other']++;
+            if(t.person) t.person.split(/,|，/).forEach(p => { let n = p.trim(); if(n) personMap[n] = (personMap[n] || 0) + 1; });
+            if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1;
+        });
+
+        renderChart('chartType', 'doughnut', ['PM', 'Project', 'Adhoc', 'Other'], [typeMap['PM'], typeMap['Project'], typeMap['Adhoc'], typeMap['Other']], 'Type', ['#00bcd4', '#9c27b0', '#ff9800', '#bdc3c7']);
+        const overdue = workData.filter(i => i.status === 'Overdue').length;
+        renderChart('chartStatus', 'pie', ['Planned', 'InProgress', 'Done', 'Overdue'], [total - done - inProgress - overdue, inProgress, done, overdue], 'Status', ['#3498db', '#f39c12', '#27ae60', '#c0392b']);
+        const sortedPersons = Object.entries(personMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        renderChart('chartPerson', 'bar', sortedPersons.map(p => p[0]), sortedPersons.map(p => p[1]), 'Tasks', '#3498db');
+        const sortedLocs = Object.entries(locMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+        renderChart('chartLoc', 'bar', sortedLocs.map(l => l[0]), sortedLocs.map(l => l[1]), 'Tasks', '#9b59b6');
+    }
+
+    function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c}]},options:{maintainAspectRatio:false}}); }
+
+    function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(ls.options.length<=1)[...new Set(workData.map(i=>i.location))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); if(ps.options.length<=1){let ns=[];workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim())));[...new Set(ns)].forEach(p=>ps.innerHTML+=`<option>${p}</option>`);}}
+    function updateStatus(msg) { document.getElementById('syncStatus').innerText = msg; }
+    function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; if(document.getElementById('inPerson').value === '') document.getElementById('inPerson').value = currentUser; }
+    function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
+    function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools; document.getElementById('inRemarks').value=i.remarks; }
+    function openConfigModal() { document.getElementById('configModal').style.display='block'; isEditing=true; }
+    function closeConfigModal() { document.getElementById('configModal').style.display='none'; isEditing=false; }
+    function saveConfig() { const nid=document.getElementById('cfgBinId').value.trim(), nkey=document.getElementById('cfgApiKey').value.trim(); if(nid&&nkey){localStorage.setItem('cs_work_bin_id',nid);localStorage.setItem('cs_work_api_key',nkey);BIN_ID=nid;API_KEY=nkey;API_URL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;closeConfigModal();fetchData();} }
+</script>
+</body>
+</html>
