@@ -22,6 +22,7 @@
         body { font-family: var(--font-stack); background: var(--bg); color: #333; margin: 0; padding: 20px; font-size: 13px; line-height: 1.5; }
         .container { max-width: 99%; margin: 0 auto; display: none; }
         
+        /* 顶部导航 (演示模式下会隐藏) */
         header { 
             background: var(--white); padding: 12px 24px; border-radius: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
@@ -47,6 +48,8 @@
         .btn-export { background: var(--success); } 
         .btn-refresh { background: #95a5a6; } 
         .btn-config { background: #34495e; } 
+        /* 🟢 演示按钮样式 */
+        .btn-present { background: #8e44ad; } 
         
         .action-group { display: flex; gap: 4px; justify-content: flex-end; }
         .btn-edit { background: #f39c12; padding: 4px 10px; font-size: 11px; color:white; border-radius: 4px; border:none; cursor:pointer;}
@@ -82,7 +85,7 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #666; }
         
-        /* 🟢 排程视图 */
+        /* 排程视图 */
         .scheduler-container { padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .scheduler-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .scheduler-title { font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; }
@@ -109,11 +112,9 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: all 0.1s;
         }
         .sch-task:hover { transform: scale(1.02); z-index: 100; position: relative; width: auto; min-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.15); background: #fff; }
-        
         .sch-task-pm { border-left-color: #00bcd4; background: #e0f7fa; color: #006064; }
         .sch-task-adhoc { border-left-color: #ff9800; background: #fff3e0; color: #e65100; }
         
-        /* 🟢 完成任务样式 (仅变色，无删除线) */
         .sch-task-done { 
             border-left-color: #27ae60 !important; 
             background: #e8f5e9 !important; 
@@ -153,6 +154,13 @@
         .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
         #syncStatus { font-size: 12px; color: #888; margin-left: 10px; font-weight: 500; }
         
+        /* 🟢 演示模式样式 (Presentation Mode) */
+        :fullscreen body, ::backdrop { background: white; overflow: hidden; }
+        :fullscreen header, :fullscreen .view-switcher, :fullscreen .controls, :fullscreen .pagination { display: none !important; }
+        :fullscreen .container { max-width: 100%; margin: 0; height: 100vh; padding: 10px; display: flex; flex-direction: column; background: #fff; }
+        :fullscreen .scheduler-container { box-shadow: none; padding: 10px; height: 100%; display: flex; flex-direction: column; }
+        :fullscreen #schedulerTableWrapper { height: auto !important; flex: 1; overflow: auto; }
+        
         @media (max-width: 768px) {
             .kanban-board { grid-template-columns: 1fr; height: auto; overflow-y: auto; }
             .dashboard-grid { grid-template-columns: 1fr 1fr; }
@@ -188,7 +196,8 @@
             <span style="font-size:12px;color:#2c3e50;font-weight:bold;margin-right:10px;">👤 <span id="displayUser">Guest</span></span>
             <span id="syncStatus">🔄 准备就绪</span>
             <div id="listControls" style="display:flex; gap:8px;">
-                <div id="schedulerControls" style="display:none;">
+                <div id="schedulerControls" style="display:none; gap:10px;">
+                    <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示模式</button>
                     <input type="month" id="schMonth" onchange="renderScheduler()">
                 </div>
                 <div id="commonControls" style="display:flex; gap:8px;">
@@ -228,7 +237,7 @@
                     <div class="legend-item"><div class="legend-color" style="background:#fff; border:1px solid #ccc; position:relative;"><span style="position:absolute; top:-2px; left:1px; font-size:9px;">班</span></div> 调休上班</div>
                 </div>
             </div>
-            <div style="height:calc(100vh - 220px); overflow:auto; border:1px solid #e0e0e0; border-radius:4px;">
+            <div id="schedulerTableWrapper" style="height:calc(100vh - 220px); overflow:auto; border:1px solid #e0e0e0; border-radius:4px;">
                 <table class="scheduler-table" id="schedulerTable"></table>
             </div>
         </div>
@@ -414,13 +423,21 @@
         const schCtrl = document.getElementById('schedulerControls');
         const comCtrl = document.getElementById('commonControls');
         if(viewName === 'scheduler') {
-            schCtrl.style.display = 'block'; comCtrl.style.display = 'none'; renderScheduler();
+            schCtrl.style.display = 'flex'; comCtrl.style.display = 'none'; renderScheduler();
         } else {
             schCtrl.style.display = 'none'; comCtrl.style.display = 'flex';
             if(viewName === 'kanban') renderKanban();
             if(viewName === 'dashboard') renderDashboard();
             if(viewName === 'list') renderTable();
         }
+    }
+
+    function enterPresentationMode() {
+        switchView('scheduler');
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) { elem.requestFullscreen(); }
+        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
+        else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
     }
 
     async function fetchData() {
