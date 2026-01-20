@@ -8,14 +8,13 @@
     <style>
         /* 🟢 全局基础与变量 */
         :root { 
-            --primary: #2d3748; /* 更深的蓝灰色 */
-            --accent: #4299e1; /* 稍微柔和的蓝色 */
-            --success: #48bb78; /* 柔和绿 */
-            --warning: #ed8936; /* 柔和橙 */
-            --danger: #f56565;  /* 柔和红 */
-            --bg: #f7fafc;      /* 极淡的冷灰背景 */
+            --primary: #2d3748;
+            --accent: #4299e1;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --bg: #f7fafc;
             --white: #ffffff; 
-            /* 字体栈优化：优先使用现代无衬线字体 */
             --font-stack: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --border-color: #e2e8f0;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -35,7 +34,7 @@
         }
         .container { max-width: 98%; margin: 0 auto; display: none; }
         
-        /* 🟢 顶部导航：毛玻璃效果 (Glassmorphism) */
+        /* 🟢 顶部导航 */
         header { 
             background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(12px); 
@@ -48,7 +47,6 @@
             position: sticky; top: 10px; z-index: 100;
             border: 1px solid rgba(255,255,255,0.6);
         }
-        /* 修正：标题样式调整以适应长标题 */
         .brand h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
         
         .view-switcher { display: flex; background: #edf2f7; padding: 4px; border-radius: 8px; }
@@ -65,11 +63,10 @@
             padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; 
             font-family: var(--font-stack); background: white; transition: all 0.2s ease; box-shadow: var(--shadow-sm);
         }
-        /* 微交互：输入框聚焦光晕 */
         select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
         input.search { width: 180px; }
         
-        /* 按钮系统：微交互与阴影 */
+        /* 按钮系统 */
         .btn { 
             padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; 
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px; 
@@ -92,7 +89,7 @@
         .show-view { display: block !important; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 表格样式：更现代的间距与边框 */
+        /* 表格样式 */
         .table-box { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg); overflow-x: auto; border: 1px solid rgba(255,255,255,0.5); }
         table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
         thead { background: #f8fafc; }
@@ -101,7 +98,7 @@
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: #f7fafc; }
         
-        /* 标签体系：更柔和的配色 */
+        /* 标签体系 */
         .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-right: 6px; margin-bottom: 4px; font-weight: 600; border: 1px solid transparent;}
         .tag-loc { background: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; font-weight: 500; }
         .tag-person { background: #edf2f7; color: #4a5568; border-color: #e2e8f0; font-weight: 500; border-radius: 20px;}
@@ -120,34 +117,67 @@
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #718096; }
         
-        /* 排程视图：视觉降噪 */
+        /* 排程视图容器 */
         .scheduler-container { padding: 24px; background: white; border-radius: 12px; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.5); }
         .scheduler-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #edf2f7; }
         .scheduler-title { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        
+        /* 🟢 排程图例 */
         .scheduler-legend { display: flex; gap: 16px; font-size: 12px; color: #718096; }
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-color { width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
         
-        .scheduler-table th, .scheduler-table td { border: 1px solid #f1f5f9; /* 极淡的网格线 */ text-align: center; padding: 4px; height: 50px; vertical-align: top; }
-        .scheduler-table th { background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; font-size: 12px; font-weight: 600; height: 36px; vertical-align: middle; border-bottom: 2px solid #e2e8f0; }
-        .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #edf2f7; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
+        /* 🟢 排程表格基础样式 - 默认背景改为浅灰（工作日） */
+        .scheduler-table th, .scheduler-table td { border: 1px solid #dcdcdc; /* 边框稍微加深一点点，看得清网格 */ text-align: center; padding: 4px; height: 50px; vertical-align: top; }
         
-        /* 周末 */
+        /* 🟢 表头样式微调：高度增加，容纳两行文字 */
+        .scheduler-table th { 
+            background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; 
+            font-size: 12px; font-weight: 600; 
+            height: 48px; /* 增加高度以容纳星期 */
+            line-height: 1.3;
+            vertical-align: middle; border-bottom: 2px solid #e2e8f0; 
+        }
+        
+        .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #cbd5e0; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
+        
+        /* 🟢 默认单元格设为浅灰（工作日） */
+        .scheduler-table td { background-color: #edf2f7; }
+
+        /* 🟢 颜色加深区域 (Deepened Colors for TV) */
+        
+        /* 周末 - 橙色加深 */
         .bg-weekend { 
-            background-color: #f7fafc !important; 
-            background-image: repeating-linear-gradient(45deg, #edf2f7 25%, transparent 25%, transparent 50%, #edf2f7 50%, #edf2f7 75%, transparent 75%, transparent);
-            background-size: 10px 10px;
+            background-color: #fcebd0 !important; /* 明显的肉色/橙色 */
+            color: #9c4221 !important; 
+            border-right: 1px solid #ed8936;
         } 
-        .bg-holiday { background-color: #fff5f5 !important; border-left: 1px solid #fed7d7; border-right: 1px solid #fed7d7;} 
-        .bg-makeup { background-color: #ffffff !important; position:relative; } 
-        .bg-makeup::after { content: '班'; position: absolute; top: 2px; right: 2px; font-size: 9px; color: #a0aec0; border:1px solid #e2e8f0; border-radius:3px; padding:0 2px; }
         
-        /* 今日高亮：使用柔和的渐变，而非粗边框 */
-        .bg-today { background: linear-gradient(to bottom, rgba(66, 153, 225, 0.04), rgba(66, 153, 225, 0.12)) !important; border-left: 1px dashed var(--accent) !important; border-right: 1px dashed var(--accent) !important; } 
-        .th-today { background-color: var(--accent) !important; color: white !important; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3); border-radius: 4px 4px 0 0; } 
+        /* 节假日 - 粉红加深，边框变细 */
+        .bg-holiday { 
+            background-color: #fed7d7 !important; /* 明显的粉红 */
+            color: #742a2a !important; 
+            border-left: 1px solid #e53e3e !important; /* 改为 1px */
+            border-right: 1px solid #e53e3e !important; /* 改为 1px */
+        } 
+        
+        /* 调休 */
+        .bg-makeup { background-color: #ffffff !important; position:relative; } 
+        .bg-makeup::after { content: '班'; position: absolute; top: 2px; right: 2px; font-size: 9px; color: #fff; background: #a0aec0; border-radius:3px; padding:0 3px; }
+        
+        /* 今天 - 蓝色加深 */
+        .bg-today { 
+            background-color: #bee3f8 !important; /* 明显的天蓝 */
+            border-left: 2px solid #3182ce !important; 
+            border-right: 2px solid #3182ce !important; 
+        } 
+        .th-today { 
+            background-color: #3182ce !important; /* 表头深蓝 */
+            color: white !important; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3); border-radius: 4px 4px 0 0; 
+        } 
 
         .scheduler-table td.cell-clickable { cursor: cell; transition: background 0.1s; }
-        .scheduler-table td.cell-clickable:hover { background-color: #ebf8ff !important; position: relative; z-index: 2; }
+        .scheduler-table td.cell-clickable:hover { filter: brightness(0.95); position: relative; z-index: 2; }
 
         .sch-task { 
             background: #fff; border-left: 4px solid var(--accent); margin: 3px 2px; padding: 4px 6px; font-size: 11px; text-align: left; border-radius: 4px; /* 圆角增加 */
@@ -284,10 +314,10 @@
             <div class="scheduler-header-bar">
                 <div class="scheduler-title" id="schedulerTitle">2026年 排程总览</div>
                 <div class="scheduler-legend">
-                    <div class="legend-item"><div class="legend-color" style="background:linear-gradient(to bottom, rgba(66, 153, 225, 0.2), rgba(66, 153, 225, 0.5)); border:none;"></div> 今天</div>
-                    <div class="legend-item"><div class="legend-color" style="background:#fff5f5;"></div> 节假日</div>
-                    <div class="legend-item"><div class="legend-color" style="background-color: #f7fafc; background-image: repeating-linear-gradient(45deg, #edf2f7 25%, transparent 25%, transparent 50%, #edf2f7 50%, #edf2f7 75%, transparent 75%, transparent); background-size: 8px 8px;"></div> 周末</div>
-                    <div class="legend-item"><div class="legend-color" style="background:#fff; border:1px solid #ccc; position:relative;"><span style="position:absolute; top:-2px; left:1px; font-size:9px;">班</span></div> 调休</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#bee3f8; border:2px solid #3182ce;"></div> 今天</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fed7d7; border:1px solid #e53e3e;"></div> 节假日</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fcebd0; border:1px solid #ed8936;"></div> 周末</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#edf2f7; border:1px solid #dcdcdc;"></div> 工作日</div>
                 </div>
             </div>
             <div id="schedulerTableWrapper" style="height:calc(100vh - 220px); overflow:auto; border:1px solid #e2e8f0; border-radius:8px;">
@@ -328,7 +358,7 @@
         <h3 style="margin-top:0; color:var(--primary); font-weight:800; font-size:24px; margin-bottom:24px;">📝 任务详情 / Task</h3>
         <input type="hidden" id="editIndex">
         <div class="form-row">
-            <div class="form-group"><label>工作类型</label><select id="inType"><option value="PM">🛠️ PM (预防维护)</option><option value="Project">🚧 Project (施工改造)</option><option value="Adhoc">⚡ Adhoc (临时抢修)</option></select></div>
+            <div class="form-group"><label>工作类型</label><select id="inType"><option value="PM">PM</option><option value="Project">Project</option><option value="Adhoc">Adhoc</option></select></div>
             <div class="form-group"><label>时间 (HH:MM)</label><input type="text" id="inTime" placeholder="例如: 14:00"></div>
         </div>
         <div class="form-row" style="background:#f7fafc; padding:15px; border-radius:12px; border:1px solid #edf2f7; margin-bottom:15px;">
@@ -342,7 +372,7 @@
             <div class="form-group"><label>备注 Remarks</label><input type="text" id="inRemarks"></div>
         </div>
         <div class="form-group"><label>人员 Person (Comma separated)</label><input type="text" id="inPerson"></div>
-        <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned (Blue)</option><option value="InProgress">In Progress (Orange)</option><option value="Done">Done (Green)</option><option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (Force Flag)</option></select></div>
+        <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned</option><option value="InProgress">InProgress</option><option value="Done">Done</option><option value="Overdue">Overdue</option></select></div>
         <div style="text-align:right; margin-top:30px;">
             <button class="btn" style="background:#edf2f7; color:#4a5568" onclick="closeModal()">Cancel</button>
             <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">Save to Cloud</button>
@@ -365,52 +395,20 @@
 <script>
     const REAL_BIN_ID = '692fd71bd0ea881f400f60b1';    
     const REAL_API_KEY = '$2a$10$qAHKdzsubRL5MD0cXJEm4OGuw68I0Ce7iVHGDyEj9FdPv5FFOIQ6q'; 
-    
-    if (localStorage.getItem('cs_work_api_key') !== REAL_API_KEY) {
-        localStorage.setItem('cs_work_api_key', REAL_API_KEY);
-        localStorage.setItem('cs_work_bin_id', REAL_BIN_ID);
-    }
-
     let BIN_ID = localStorage.getItem('cs_work_bin_id') || REAL_BIN_ID; 
     let API_KEY = localStorage.getItem('cs_work_api_key') || REAL_API_KEY;
     let API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    const HOLIDAYS = [
-        '2026-01-01', '2026-01-02', '2026-01-03', // 元旦
-        '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-21', '2026-02-22', // 春节
-        '2026-04-04', '2026-04-05', '2026-04-06', // 清明
-        '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05', // 劳动节
-        '2026-06-19', '2026-06-20', '2026-06-21', // 端午
-        '2026-09-25', '2026-09-26', '2026-09-27', // 中秋
-        '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07' // 国庆
-    ];
+    const HOLIDAYS = ['2026-01-01','2026-01-02','2026-01-03','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-21','2026-02-22','2026-04-04','2026-04-05','2026-04-06','2026-05-01','2026-05-02','2026-05-03','2026-05-04','2026-05-05','2026-06-19','2026-06-20','2026-06-21','2026-09-25','2026-09-26','2026-09-27','2026-10-01','2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07'];
+    const MAKEUP_WORKDAYS = ['2026-02-15','2026-02-28','2026-04-26','2026-05-09','2026-09-27','2026-10-10'];
+    const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
 
-    const MAKEUP_WORKDAYS = [
-        '2026-02-15', '2026-02-28', // 春节调休
-        '2026-04-26', '2026-05-09', // 劳动节调休
-        '2026-09-27', '2026-10-10'  // 国庆调休
-    ];
-    
-    // 🎨 Morandi & Soft Palette
-    const COLORS = {
-        blue: '#63b3ed',
-        teal: '#4fd1c5',
-        green: '#68d391',
-        orange: '#f6ad55',
-        red: '#fc8181',
-        purple: '#b794f4',
-        gray: '#cbd5e0'
-    };
-
-    let workData = []; let isEditing = false; let chartInstances = {};
-    let currentPage = 1; const itemsPerPage = 12;
-    let currentUser = "Guest";
+    let workData = []; let isEditing = false; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
 
     function checkLogin() {
         const input = document.getElementById('loginName').value.trim();
         if(input.length > 0) {
-            currentUser = input;
-            sessionStorage.setItem('current_user', currentUser); 
+            currentUser = input; sessionStorage.setItem('current_user', currentUser); 
             document.getElementById('displayUser').innerText = currentUser;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -418,319 +416,104 @@
             else openConfigModal();
         } else { alert("请填写您的姓名"); }
     }
-
     if(sessionStorage.getItem('current_user')) {
-        currentUser = sessionStorage.getItem('current_user');
-        document.getElementById('displayUser').innerText = currentUser;
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
+        currentUser = sessionStorage.getItem('current_user'); document.getElementById('displayUser').innerText = currentUser;
+        document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
         if(checkConfig()) fetchData();
     }
 
     function normalizeDateStr(dateStr) {
         if (!dateStr) return '';
-        let s = dateStr.trim();
-        const currentYear = new Date().getFullYear();
-        if (s.includes('月')) {
-            s = s.replace(/日/g, '').replace(/月/g, '/');
-            if (!s.includes('年')) s = currentYear + '/' + s; 
-            else s = s.replace(/年/g, '/');
-        } else { s = s.replace(/-/g, '/'); }
-        const parts = s.split('/');
-        if(parts.length === 2) s = currentYear + '/' + s;
-        const d = new Date(s);
-        if(isNaN(d.getTime())) return '';
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        let s = dateStr.trim(); const currentYear = new Date().getFullYear();
+        if (s.includes('月')) { s = s.replace(/日/g, '').replace(/月/g, '/'); if (!s.includes('年')) s = currentYear + '/' + s; else s = s.replace(/年/g, '/'); } else { s = s.replace(/-/g, '/'); }
+        const parts = s.split('/'); if(parts.length === 2) s = currentYear + '/' + s;
+        const d = new Date(s); if(isNaN(d.getTime())) return '';
+        const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
         return `${y}-${m}-${day}`;
     }
 
     function getDateDisplay(start, end) {
-        const s = normalizeDateStr(start);
-        const e = normalizeDateStr(end);
-        if (!s) return { html: '', raw: '' };
-        
-        const dateObj = new Date(s.replace(/-/g, '/'));
-        const day = dateObj.getDay();
-        const isMakeup = MAKEUP_WORKDAYS.includes(s);
+        const s = normalizeDateStr(start); const e = normalizeDateStr(end); if (!s) return { html: '', raw: '' };
+        const dateObj = new Date(s.replace(/-/g, '/')); const day = dateObj.getDay(); const isMakeup = MAKEUP_WORKDAYS.includes(s);
         let badge = '';
-        
         if (HOLIDAYS.includes(s)) badge = `<span class="tag tag-holiday">🧧 节假日</span>`;
         else if (isMakeup) badge = `<span class="tag tag-makeup">💼 班 (调休)</span>`;
         else if (day === 0 || day === 6) badge = `<span class="tag tag-weekend">🏖️ 周末</span>`;
-
         let html = `<div>${badge} <b style="font-size:14px;color:#2d3748;font-family:inherit;">${s}</b></div>`;
         if (e && e !== s) {
-            const d1 = new Date(s);
-            const d2 = new Date(e);
-            const diffTime = Math.abs(d2 - d1);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            const d1 = new Date(s); const d2 = new Date(e); const diffTime = Math.abs(d2 - d1); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
             html += `<div style="margin-top:4px; font-size:12px; color:#718096;"><span>⬇️ 至 ${e}</span><span class="tag tag-duration">🕒 ${diffDays}天</span></div>`;
         }
         return { html: html, raw: s };
     }
 
-    const today = new Date();
-    document.getElementById('schMonth').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-
+    const today = new Date(); document.getElementById('schMonth').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
     setInterval(() => { if(document.getElementById('mainApp').style.display === 'block' && BIN_ID && API_KEY && !isEditing) fetchData(); }, 60000); 
 
     function checkConfig() { if (!BIN_ID || !API_KEY) { updateStatus('⚠️ 未配置'); return false; } return true; }
-
     function switchView(viewName) {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.view-btn[onclick*="${viewName}"]`).classList.add('active');
         ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => document.getElementById(id).classList.remove('show-view'));
         document.getElementById(viewName + 'View').classList.add('show-view');
-        
-        const schCtrl = document.getElementById('schedulerControls');
-        const comCtrl = document.getElementById('commonControls');
-        if(viewName === 'scheduler') {
-            schCtrl.style.display = 'flex'; comCtrl.style.display = 'none'; renderScheduler();
-        } else {
-            schCtrl.style.display = 'none'; comCtrl.style.display = 'flex';
-            if(viewName === 'kanban') renderKanban();
-            if(viewName === 'dashboard') renderDashboard();
-            if(viewName === 'list') renderTable();
-        }
+        const schCtrl = document.getElementById('schedulerControls'); const comCtrl = document.getElementById('commonControls');
+        if(viewName === 'scheduler') { schCtrl.style.display = 'flex'; comCtrl.style.display = 'none'; renderScheduler(); } else { schCtrl.style.display = 'none'; comCtrl.style.display = 'flex'; if(viewName === 'kanban') renderKanban(); if(viewName === 'dashboard') renderDashboard(); if(viewName === 'list') renderTable(); }
     }
+    function enterPresentationMode() { switchView('scheduler'); const elem = document.documentElement; if (elem.requestFullscreen) { elem.requestFullscreen(); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); } }
 
-    function enterPresentationMode() {
-        switchView('scheduler');
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) { elem.requestFullscreen(); }
-        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
-        else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
-    }
-
-    // 🟢 安全逻辑：只读取，不自动修改
     async function fetchData() {
-        if(isEditing) return; 
-        updateStatus('🔄 同步中...');
-        try {
-            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
-            if(!res.ok) throw new Error("连接失败(401/403)");
-            const json = await res.json();
-            if (json.record && Array.isArray(json.record.tasks)) { workData = json.record.tasks; }
-            else if (json.tasks && Array.isArray(json.tasks)) { workData = json.tasks; }
-            else { workData = []; }
-            
-            if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler();
-            else refreshView();
-            updateStatus('✅ 已同步');
-        } catch (e) { updateStatus('❌ ' + e.message); }
+        if(isEditing) return; updateStatus('🔄 同步中...');
+        try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("连接失败(401/403)"); const json = await res.json(); if (json.record && Array.isArray(json.record.tasks)) { workData = json.record.tasks; } else if (json.tasks && Array.isArray(json.tasks)) { workData = json.tasks; } else { workData = []; } if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); else refreshView(); updateStatus('✅ 已同步'); } catch (e) { updateStatus('❌ ' + e.message); }
     }
 
-    function refreshView() {
-        currentPage = 1;
-        if(document.getElementById('listView').classList.contains('show-view')) renderTable();
-        if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban();
-        if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard();
-    }
+    function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); }
 
     function getFilteredData() {
-        const search = document.getElementById('searchInput').value.toUpperCase();
-        const locFilter = document.getElementById('locFilter').value;
-        const personFilter = document.getElementById('personFilter').value;
-        const typeFilter = document.getElementById('typeFilter').value;
+        const search = document.getElementById('searchInput').value.toUpperCase(); const locFilter = document.getElementById('locFilter').value; const personFilter = document.getElementById('personFilter').value; const typeFilter = document.getElementById('typeFilter').value;
         let mapped = workData.map((item, idx) => ({ ...item, _id: idx }));
-        let filtered = mapped.filter(item => {
-            const str = (item.event+item.location+item.person+item.date+(item.tools||"")+(item.remarks||"")).toUpperCase();
-            return str.includes(search) && 
-                   (locFilter === "" || item.location === locFilter) &&
-                   (personFilter === "" || item.person.includes(personFilter)) &&
-                   (typeFilter === "" || item.type === typeFilter);
-        });
-        filtered.sort((a, b) => {
-            const d1Str = normalizeDateStr(a.date) || '2099-12-31';
-            const d2Str = normalizeDateStr(b.date) || '2099-12-31';
-            if (d1Str !== d2Str) return d1Str.localeCompare(d2Str);
-            const t1 = (a.time || '00:00').split('-')[0].trim();
-            const t2 = (b.time || '00:00').split('-')[0].trim();
-            return t1.localeCompare(t2);
-        });
-        return filtered;
+        let filtered = mapped.filter(item => { const str = (item.event+item.location+item.person+item.date+(item.tools||"")+(item.remarks||"")).toUpperCase(); return str.includes(search) && (locFilter === "" || item.location === locFilter) && (personFilter === "" || item.person.includes(personFilter)) && (typeFilter === "" || item.type === typeFilter); });
+        filtered.sort((a, b) => { const d1Str = normalizeDateStr(a.date) || '2099-12-31'; const d2Str = normalizeDateStr(b.date) || '2099-12-31'; if (d1Str !== d2Str) return d1Str.localeCompare(d2Str); const t1 = (a.time || '00:00').split('-')[0].trim(); const t2 = (b.time || '00:00').split('-')[0].trim(); return t1.localeCompare(t2); }); return filtered;
     }
 
-    // 🟢 视觉增强：空状态与动态 Overdue
     function renderTable() {
-        const tbody = document.getElementById('listBody');
-        const filtered = getFilteredData();
-        const totalItems = filtered.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-        if(currentPage > totalPages) currentPage = totalPages;
-        const startIdx = (currentPage - 1) * itemsPerPage;
-        const endIdx = startIdx + itemsPerPage;
-        const pageData = filtered.slice(startIdx, endIdx);
-
-        document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(endIdx, totalItems)} of ${totalItems}`;
-        document.getElementById('prevBtn').disabled = currentPage === 1;
-        document.getElementById('nextBtn').disabled = currentPage === totalPages;
-
-        tbody.innerHTML = '';
-        if(pageData.length === 0) { 
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:60px;color:#a0aec0;"><div style="font-size:32px;margin-bottom:10px;opacity:0.6;">📭</div><div>暂无相关任务数据 / No Data Found</div><button class="btn btn-add" onclick="openModal()" style="margin-top:15px; box-shadow:none;">+ Create New Task</button></td></tr>`; 
-            return; 
-        }
-        
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
+        const tbody = document.getElementById('listBody'); const filtered = getFilteredData(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage) || 1; if(currentPage > totalPages) currentPage = totalPages; const startIdx = (currentPage - 1) * itemsPerPage; const endIdx = startIdx + itemsPerPage; const pageData = filtered.slice(startIdx, endIdx);
+        document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(endIdx, totalItems)} of ${totalItems}`; document.getElementById('prevBtn').disabled = currentPage === 1; document.getElementById('nextBtn').disabled = currentPage === totalPages; tbody.innerHTML = '';
+        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:60px;color:#a0aec0;"><div style="font-size:32px;margin-bottom:10px;opacity:0.6;">📭</div><div>暂无相关任务数据 / No Data Found</div><button class="btn btn-add" onclick="openModal()" style="margin-top:15px; box-shadow:none;">+ Create New Task</button></td></tr>`; return; }
+        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         pageData.forEach(item => {
-            const deadline = normalizeDateStr(item.endDate || item.date);
-            const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
-
-            let color = '#4299e1'; 
-            let statusDisplay = `● ${item.status}`;
-
-            if (item.status === 'Done') {
-                color = '#48bb78';
-                statusDisplay = `● Done`;
-            } else if (isOverdue) {
-                color = '#e53e3e';
-                const originStatus = item.status === 'Overdue' ? 'Task' : item.status;
-                statusDisplay = `⚠️ Overdue <span style="font-size:10px;opacity:0.8">(${originStatus})</span>`;
-            } else if (item.status === 'InProgress') {
-                color = '#ed8936';
-                statusDisplay = `● In Progress`;
-            }
-
-            let persons = item.person ? item.person.split(/,|，/).map(p => `<span class="tag tag-person">${p.trim()}</span>`).join('') : '';
-            const dateDisplay = getDateDisplay(item.date, item.endDate);
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="line-height:1.6">${dateDisplay.html}<br><span style="color:#a0aec0;font-size:12px">${item.time||''}</span></td>
-                    <td>${item.type === 'PM' ? '<span class="tag tag-type tag-pm">🛠️ PM</span>' : (item.type === 'Project' ? '<span class="tag tag-type tag-project">🚧 施工</span>' : '<span class="tag tag-type tag-adhoc">⚡ 抢修</span>')}</td>
-                    <td><span class="tag tag-loc">${item.location}</span></td>
-                    <td style="font-weight:500">${item.event}</td>
-                    <td style="color:#718096">${item.tools || '-'}</td>
-                    <td style="color:#718096; font-style:italic">${item.remarks || '-'}</td>
-                    <td>${persons}</td>
-                    <td><span style="color:${color};font-weight:700">${statusDisplay}</span></td>
-                    <td><div class="action-group"><button class="btn btn-edit" onclick="editItem(${item._id})">Edit</button><button class="btn btn-del" onclick="delItem(${item._id})">Del</button></div></td>
-                </tr>`;
+            const deadline = normalizeDateStr(item.endDate || item.date); const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
+            let color = '#4299e1'; let statusDisplay = `● ${item.status}`;
+            if (item.status === 'Done') { color = '#48bb78'; statusDisplay = `● Done`; } else if (isOverdue) { color = '#e53e3e'; const originStatus = item.status === 'Overdue' ? 'Task' : item.status; statusDisplay = `⚠️ Overdue <span style="font-size:10px;opacity:0.8">(${originStatus})</span>`; } else if (item.status === 'InProgress') { color = '#ed8936'; statusDisplay = `● In Progress`; }
+            let persons = item.person ? item.person.split(/,|，/).map(p => `<span class="tag tag-person">${p.trim()}</span>`).join('') : ''; const dateDisplay = getDateDisplay(item.date, item.endDate);
+            tbody.innerHTML += `<tr><td style="line-height:1.6">${dateDisplay.html}<br><span style="color:#a0aec0;font-size:12px">${item.time||''}</span></td><td>${item.type === 'PM' ? '<span class="tag tag-type tag-pm">🛠️ PM</span>' : (item.type === 'Project' ? '<span class="tag tag-type tag-project">🚧 施工</span>' : '<span class="tag tag-type tag-adhoc">⚡ 抢修</span>')}</td><td><span class="tag tag-loc">${item.location}</span></td><td style="font-weight:500">${item.event}</td><td style="color:#718096">${item.tools || '-'}</td><td style="color:#718096; font-style:italic">${item.remarks || '-'}</td><td>${persons}</td><td><span style="color:${color};font-weight:700">${statusDisplay}</span></td><td><div class="action-group"><button class="btn btn-edit" onclick="editItem(${item._id})">Edit</button><button class="btn btn-del" onclick="delItem(${item._id})">Del</button></div></td></tr>`;
         });
     }
-
     function changePage(delta) { currentPage += delta; renderTable(); }
-
-    function exportToCSV() {
-        const filtered = getFilteredData();
-        if(filtered.length === 0) return alert("没有数据可导出");
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-        csvContent += "Type,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n";
-        filtered.forEach(row => {
-            const rowStr = [
-                row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', 
-                `"${(row.event || '').replace(/"/g, '""')}"`, 
-                `"${(row.tools || '').replace(/"/g, '""')}"`,
-                `"${(row.remarks || '').replace(/"/g, '""')}"`,
-                `"${(row.person || '').replace(/"/g, '""')}"`,
-                row.status || ''
-            ].join(",");
-            csvContent += rowStr + "\n";
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `CS_Work_Export_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+    function exportToCSV() { const filtered = getFilteredData(); if(filtered.length === 0) return alert("没有数据可导出"); let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; csvContent += "Type,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; filtered.forEach(row => { const rowStr = [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '').replace(/"/g, '""')}"`, `"${(row.tools || '').replace(/"/g, '""')}"`, `"${(row.remarks || '').replace(/"/g, '""')}"`, `"${(row.person || '').replace(/"/g, '""')}"`, row.status || '' ].join(","); csvContent += rowStr + "\n"; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `CS_Work_Export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
     function renderKanban() {
-        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { 
-            document.getElementById(`col-${s}`).innerHTML=''; 
-            document.getElementById(`count-${s}`).innerText='0'; 
-        });
-        const filtered = getFilteredData();
-        let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
-        
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
+        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { document.getElementById(`col-${s}`).innerHTML=''; document.getElementById(`count-${s}`).innerText='0'; });
+        const filtered = getFilteredData(); let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
+        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         filtered.forEach(item => {
-            let visualStatus = item.status || 'Planned';
-            const deadline = normalizeDateStr(item.endDate || item.date);
-
-            if (visualStatus !== 'Done' && (visualStatus === 'Overdue' || (deadline && deadline < todayStr))) {
-                visualStatus = 'Overdue';
-            }
-
-            if(counts.hasOwnProperty(visualStatus)) counts[visualStatus]++; 
-            else counts['Planned']++; 
-
-            const dateDisplay = getDateDisplay(item.date, item.endDate);
-            const persons = item.person ? item.person.split(/,|，/).map(p => p.trim()).join(', ') : '';
-            
-            let dateStr = dateDisplay.raw;
-            if(item.endDate && item.endDate !== item.date) dateStr += ` ➜ ${normalizeDateStr(item.endDate)}`;
-            
-            const card = document.createElement('div');
-            card.className = `kanban-card card-${visualStatus}`; 
-            card.draggable = true; 
-            card.setAttribute('ondragstart', `drag(event, ${item._id})`);
-            
+            let visualStatus = item.status || 'Planned'; const deadline = normalizeDateStr(item.endDate || item.date);
+            if (visualStatus !== 'Done' && (visualStatus === 'Overdue' || (deadline && deadline < todayStr))) { visualStatus = 'Overdue'; }
+            if(counts.hasOwnProperty(visualStatus)) counts[visualStatus]++; else counts['Planned']++; 
+            const dateDisplay = getDateDisplay(item.date, item.endDate); const persons = item.person ? item.person.split(/,|，/).map(p => p.trim()).join(', ') : '';
+            let dateStr = dateDisplay.raw; if(item.endDate && item.endDate !== item.date) dateStr += ` ➜ ${normalizeDateStr(item.endDate)}`;
+            const card = document.createElement('div'); card.className = `kanban-card card-${visualStatus}`; card.draggable = true; card.setAttribute('ondragstart', `drag(event, ${item._id})`);
             card.innerHTML = `<div class="k-title">${item.event}</div><div class="k-meta"><span>📅 ${dateStr}</span><span>📍 ${item.location}</span></div><div style="font-size:12px; color:#666; margin-bottom:5px;">${item.remarks || ''}</div><div class="k-footer"><span class="k-person">👤 ${persons}</span><button class="btn-edit" style="border:none; cursor:pointer;" onclick="editItem(${item._id})">✎</button></div>`;
-            
-            const col = document.getElementById(`col-${visualStatus}`) || document.getElementById(`col-Planned`);
-            col.appendChild(card);
+            const col = document.getElementById(`col-${visualStatus}`) || document.getElementById(`col-Planned`); col.appendChild(card);
         });
         for(let k in counts) document.getElementById(`count-${k}`).innerText = counts[k];
     }
-
     function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
     function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
     function drag(ev, id) { ev.dataTransfer.setData("text", id); }
-    async function drop(ev, newStatus) {
-        ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
-        var taskId = ev.dataTransfer.getData("text");
-        if (workData[taskId] && workData[taskId].status !== newStatus) {
-            workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...');
-            try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); updateStatus('✅ 已更新'); } 
-            catch(e) { updateStatus('❌ 失败'); }
-        }
-    }
+    async function drop(ev, newStatus) { ev.preventDefault(); ev.currentTarget.classList.remove('drag-over'); var taskId = ev.dataTransfer.getData("text"); if (workData[taskId] && workData[taskId].status !== newStatus) { workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...'); try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); updateStatus('✅ 已更新'); } catch(e) { updateStatus('❌ 失败'); } } }
 
-    async function saveData() {
-        const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true;
-        try {
-            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
-            if(!res.ok) throw new Error("Err");
-            const json = await res.json();
-            let latestTasks = json.record.tasks || [];
-            const idx = document.getElementById('editIndex').value;
-            const task = { 
-                type: document.getElementById('inType').value,
-                date: document.getElementById('inDate').value,
-                endDate: document.getElementById('inEndDate').value, 
-                time: document.getElementById('inTime').value, 
-                location: document.getElementById('inLoc').value, 
-                event: document.getElementById('inEvent').value, 
-                person: document.getElementById('inPerson').value, 
-                status: document.getElementById('inStatus').value, 
-                tools: document.getElementById('inTools').value, 
-                remarks: document.getElementById('inRemarks').value 
-            };
-            if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task;
-            workData = latestTasks;
-            await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) });
-            closeModal(); refreshView(); updateStatus('✅ 保存成功');
-        } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; }
-    }
-
-    async function delItem(idx) {
-        if(!confirm("删除?")) return;
-        try {
-            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
-            const json = await res.json();
-            let tasks = json.record.tasks || [];
-            if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); refreshView(); updateStatus('✅ 删除成功'); }
-        } catch (e) { alert("删除失败"); }
-    }
+    async function saveData() { const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("Err"); const json = await res.json(); let latestTasks = json.record.tasks || []; const idx = document.getElementById('editIndex').value; const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value }; if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task; workData = latestTasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); closeModal(); refreshView(); updateStatus('✅ 保存成功'); } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; } }
+    async function delItem(idx) { if(!confirm("删除?")) return; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); const json = await res.json(); let tasks = json.record.tasks || []; if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); refreshView(); updateStatus('✅ 删除成功'); } } catch (e) { alert("删除失败"); } }
 
     function renderScheduler() {
         const table = document.getElementById('schedulerTable');
@@ -744,6 +527,9 @@
         const daysInMonth = new Date(year, month, 0).getDate();
         const now = new Date();
         
+        // 🟢 增加星期显示逻辑
+        const WEEK_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
         let thead = '<thead><tr><th class="col-person" style="background:#fff;color:#2d3748;z-index:20">人员 / 日期</th>';
         for(let d=1; d<=daysInMonth; d++) {
             const dateObj = new Date(year, month-1, d);
@@ -753,22 +539,29 @@
             const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
             const isMakeup = MAKEUP_WORKDAYS.includes(dateStr); 
 
-            let bg = '#fff'; 
+            // 获取星期字符串
+            const weekStr = WEEK_NAMES[dateObj.getDay()];
+
+            let bg = '#f8fafc'; // 默认表头背景（工作日）
             let thClass = '';
             
+            // 🟢 修改点：颜色加深逻辑
             if (isToday) { bg = ''; thClass = 'th-today'; }
-            else if (isHoliday) bg = '#fff5f5'; 
+            else if (isHoliday) bg = '#fed7d7';  /* 明显粉红 */
             else if (isMakeup) bg = '#fff'; 
-            else if (isWeekend) bg = '#fffaf0';
+            else if (isWeekend) bg = '#fcebd0'; /* 明显橙色 */
             
-            thead += `<th class="${thClass}" style="background:${bg}; min-width:36px;">${d}</th>`;
+            // 🟢 修改点：添加星期显示
+            thead += `<th class="${thClass}" style="background:${bg}; min-width:36px;">
+                        ${d}<br>
+                        <span style="font-size:9px; font-weight:normal; opacity:0.8;">${weekStr}</span>
+                      </th>`;
         }
         thead += '</tr></thead>';
         table.innerHTML += thead;
 
         let people = new Set();
         const indexedData = workData.map((item, index) => ({ ...item, _id: index }));
-
         workData.forEach(t => { if(t.person) t.person.split(/,|，/).forEach(p => people.add(p.trim())); });
         const personList = Array.from(people).sort();
 
@@ -780,7 +573,6 @@
                 const dateObj = new Date(year, month-1, d);
                 const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                
                 const isHoliday = HOLIDAYS.includes(cellDateStr);
                 const isMakeup = MAKEUP_WORKDAYS.includes(cellDateStr);
                 const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
@@ -793,18 +585,14 @@
 
                 const tasks = indexedData.filter(t => {
                     const hasPerson = t.person && t.person.includes(p);
-                    const start = normalizeDateStr(t.date);
-                    const end = normalizeDateStr(t.endDate) || start;
+                    const start = normalizeDateStr(t.date); const end = normalizeDateStr(t.endDate) || start;
                     return hasPerson && cellDateStr >= start && cellDateStr <= end;
                 });
-
                 let content = '';
                 tasks.forEach(t => {
-                    let typeClass = t.type==='PM'?'sch-task-pm':(t.type==='Adhoc'?'sch-task-adhoc':'');
-                    if(t.status === 'Done') typeClass += ' sch-task-done';
+                    let typeClass = t.type==='PM'?'sch-task-pm':(t.type==='Adhoc'?'sch-task-adhoc':''); if(t.status === 'Done') typeClass += ' sch-task-done';
                     content += `<div class="sch-task ${typeClass}" onclick="event.stopPropagation(); editItem(${t._id})"><span class="sch-task-text">${t.event}</span></div>`;
                 });
-                
                 tbody += `<td class="${cellClass}" onclick="openModalWithDate('${cellDateStr}', '${p}')">${content}</td>`;
             }
             tbody += '</tr>';
@@ -813,93 +601,30 @@
         table.innerHTML += tbody;
     }
 
-    function openModalWithDate(date, person) {
-        openModal();
-        document.getElementById('inDate').value = date;
-        document.getElementById('inPerson').value = person;
-    }
-
-    // 🟢 图表升级：配色更高级
+    function openModalWithDate(date, person) { openModal(); document.getElementById('inDate').value = date; document.getElementById('inPerson').value = person; }
     function renderDashboard() {
-        const total = workData.length;
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-        
-        let done = 0;
-        let inProgress = 0;
-        let overdueCount = 0;
-        let todayCount = 0;
-
+        const total = workData.length; const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        let done = 0; let inProgress = 0; let overdueCount = 0; let todayCount = 0;
         workData.forEach(task => {
-            const dateStr = normalizeDateStr(task.date);
-            const deadline = normalizeDateStr(task.endDate || task.date);
-            const isDone = task.status === 'Done';
-
+            const dateStr = normalizeDateStr(task.date); const deadline = normalizeDateStr(task.endDate || task.date); const isDone = task.status === 'Done';
             if(dateStr === todayStr) todayCount++;
-            
-            if (isDone) {
-                done++;
-            } else if (task.status === 'Overdue' || (deadline && deadline < todayStr)) {
-                overdueCount++;
-            } else if (task.status === 'InProgress') {
-                inProgress++;
-            }
+            if (isDone) { done++; } else if (task.status === 'Overdue' || (deadline && deadline < todayStr)) { overdueCount++; } else if (task.status === 'InProgress') { inProgress++; }
         });
-        
         const plannedCount = total - done - inProgress - overdueCount;
-
-        document.getElementById('kpi-today').innerText = todayCount;
-        document.getElementById('kpi-overdue').innerText = overdueCount;
-        document.getElementById('kpi-progress').innerText = inProgress;
-        document.getElementById('kpi-done').innerText = done;
-
-        let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 };
-        let personMap = {}, locMap = {};
-        workData.forEach(t => {
-            let tType = t.type || 'Other';
-            if(typeMap.hasOwnProperty(tType)) typeMap[tType]++; else typeMap['Other']++;
-            if(t.person) t.person.split(/,|，/).forEach(p => { let n = p.trim(); if(n) personMap[n] = (personMap[n] || 0) + 1; });
-            if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1;
-        });
-
-        // 应用 Morandi 色系
+        document.getElementById('kpi-today').innerText = todayCount; document.getElementById('kpi-overdue').innerText = overdueCount; document.getElementById('kpi-progress').innerText = inProgress; document.getElementById('kpi-done').innerText = done;
+        let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 }; let personMap = {}, locMap = {};
+        workData.forEach(t => { let tType = t.type || 'Other'; if(typeMap.hasOwnProperty(tType)) typeMap[tType]++; else typeMap['Other']++; if(t.person) t.person.split(/,|，/).forEach(p => { let n = p.trim(); if(n) personMap[n] = (personMap[n] || 0) + 1; }); if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1; });
         renderChart('chartType', 'doughnut', ['PM (预防)', 'Project (施工)', 'Adhoc (抢修)', 'Other'], [typeMap['PM'], typeMap['Project'], typeMap['Adhoc'], typeMap['Other']], 'Type', [COLORS.teal, COLORS.purple, COLORS.orange, COLORS.gray]);
         renderChart('chartStatus', 'pie', ['Planned', 'InProgress', 'Done', 'Overdue'], [plannedCount, inProgress, done, overdueCount], 'Status', [COLORS.blue, COLORS.orange, COLORS.green, COLORS.red]);
-        
-        const sortedPersons = Object.entries(personMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        renderChart('chartPerson', 'bar', sortedPersons.map(p => p[0]), sortedPersons.map(p => p[1]), 'Tasks', COLORS.blue);
-        const sortedLocs = Object.entries(locMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        renderChart('chartLoc', 'bar', sortedLocs.map(l => l[0]), sortedLocs.map(l => l[1]), 'Tasks', COLORS.purple);
+        const sortedPersons = Object.entries(personMap).sort((a,b) => b[1] - a[1]).slice(0, 10); renderChart('chartPerson', 'bar', sortedPersons.map(p => p[0]), sortedPersons.map(p => p[1]), 'Tasks', COLORS.blue);
+        const sortedLocs = Object.entries(locMap).sort((a,b) => b[1] - a[1]).slice(0, 10); renderChart('chartLoc', 'bar', sortedLocs.map(l => l[0]), sortedLocs.map(l => l[1]), 'Tasks', COLORS.purple);
     }
-
     function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c, borderColor:'#fff', borderWidth:2}]},options:{maintainAspectRatio:false, plugins:{legend:{labels:{font:{family:"'Inter', sans-serif"}}}}}}); }
-
     function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(ls.options.length<=1)[...new Set(workData.map(i=>i.location))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); if(ps.options.length<=1){let ns=[];workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim())));[...new Set(ns)].forEach(p=>ps.innerHTML+=`<option>${p}</option>`);}}
     function updateStatus(msg) { document.getElementById('syncStatus').innerText = msg; }
-    function openModal() { 
-        document.getElementById('taskModal').style.display='block'; 
-        document.getElementById('editIndex').value='-1'; 
-        isEditing=true; 
-        if(document.getElementById('inPerson').value === '') {
-            document.getElementById('inPerson').value = currentUser; 
-        }
-    }
+    function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; if(document.getElementById('inPerson').value === '') { document.getElementById('inPerson').value = currentUser; } }
     function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
-    function editItem(idx) { 
-        openModal(); 
-        const i=workData[idx]; 
-        document.getElementById('editIndex').value=idx; 
-        document.getElementById('inType').value=i.type || 'PM'; 
-        document.getElementById('inDate').value=i.date; 
-        document.getElementById('inEndDate').value=i.endDate || ''; 
-        document.getElementById('inTime').value=i.time; 
-        document.getElementById('inLoc').value=i.location; 
-        document.getElementById('inEvent').value=i.event; 
-        document.getElementById('inPerson').value=i.person; 
-        document.getElementById('inStatus').value=i.status; 
-        document.getElementById('inTools').value=i.tools; 
-        document.getElementById('inRemarks').value=i.remarks; 
-    }
+    function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools; document.getElementById('inRemarks').value=i.remarks; }
     function openConfigModal() { document.getElementById('configModal').style.display='block'; isEditing=true; }
     function closeConfigModal() { document.getElementById('configModal').style.display='none'; isEditing=false; }
     function saveConfig() { const nid=document.getElementById('cfgBinId').value.trim(), nkey=document.getElementById('cfgApiKey').value.trim(); if(nid&&nkey){localStorage.setItem('cs_work_bin_id',nid);localStorage.setItem('cs_work_api_key',nkey);BIN_ID=nid;API_KEY=nkey;API_URL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;closeConfigModal();fetchData();} }
