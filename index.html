@@ -44,10 +44,11 @@
             border-radius: 12px; 
             box-shadow: var(--shadow-md); 
             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 24px; 
-            border-top: none; /* 去掉旧版粗边框 */
+            border-top: none; 
             position: sticky; top: 10px; z-index: 100;
             border: 1px solid rgba(255,255,255,0.6);
         }
+        /* 修正：标题样式调整以适应长标题 */
         .brand h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
         
         .view-switcher { display: flex; background: #edf2f7; padding: 4px; border-radius: 8px; }
@@ -131,10 +132,16 @@
         .scheduler-table th { background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; font-size: 12px; font-weight: 600; height: 36px; vertical-align: middle; border-bottom: 2px solid #e2e8f0; }
         .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #edf2f7; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
         
-        .bg-weekend { background-color: #fffaf0 !important; } 
-        .bg-holiday { background-color: #fff5f5 !important; } 
+        /* 周末 */
+        .bg-weekend { 
+            background-color: #f7fafc !important; 
+            background-image: repeating-linear-gradient(45deg, #edf2f7 25%, transparent 25%, transparent 50%, #edf2f7 50%, #edf2f7 75%, transparent 75%, transparent);
+            background-size: 10px 10px;
+        } 
+        .bg-holiday { background-color: #fff5f5 !important; border-left: 1px solid #fed7d7; border-right: 1px solid #fed7d7;} 
         .bg-makeup { background-color: #ffffff !important; position:relative; } 
         .bg-makeup::after { content: '班'; position: absolute; top: 2px; right: 2px; font-size: 9px; color: #a0aec0; border:1px solid #e2e8f0; border-radius:3px; padding:0 2px; }
+        
         /* 今日高亮：使用柔和的渐变，而非粗边框 */
         .bg-today { background: linear-gradient(to bottom, rgba(66, 153, 225, 0.04), rgba(66, 153, 225, 0.12)) !important; border-left: 1px dashed var(--accent) !important; border-right: 1px dashed var(--accent) !important; } 
         .th-today { background-color: var(--accent) !important; color: white !important; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3); border-radius: 4px 4px 0 0; } 
@@ -230,7 +237,7 @@
 <div class="container" id="mainApp">
     <header>
         <div class="brand">
-            <h1>CS Dept. <span style="font-weight:400; color:#a0aec0; margin-left:5px; font-size:16px;">WorkOS</span></h1>
+            <h1>CS Dept. Intelligent Work Management</h1>
         </div>
         <div class="view-switcher">
             <button class="view-btn active" onclick="switchView('list')">📋 列表 List</button>
@@ -279,7 +286,7 @@
                 <div class="scheduler-legend">
                     <div class="legend-item"><div class="legend-color" style="background:linear-gradient(to bottom, rgba(66, 153, 225, 0.2), rgba(66, 153, 225, 0.5)); border:none;"></div> 今天</div>
                     <div class="legend-item"><div class="legend-color" style="background:#fff5f5;"></div> 节假日</div>
-                    <div class="legend-item"><div class="legend-color" style="background:#fffaf0;"></div> 周末</div>
+                    <div class="legend-item"><div class="legend-color" style="background-color: #f7fafc; background-image: repeating-linear-gradient(45deg, #edf2f7 25%, transparent 25%, transparent 50%, #edf2f7 50%, #edf2f7 75%, transparent 75%, transparent); background-size: 8px 8px;"></div> 周末</div>
                     <div class="legend-item"><div class="legend-color" style="background:#fff; border:1px solid #ccc; position:relative;"><span style="position:absolute; top:-2px; left:1px; font-size:9px;">班</span></div> 调休</div>
                 </div>
             </div>
