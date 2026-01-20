@@ -127,10 +127,10 @@
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-color { width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
         
-        /* 🟢 排程表格基础样式 - 默认背景改为浅灰（工作日） */
-        .scheduler-table th, .scheduler-table td { border: 1px solid #dcdcdc; /* 边框稍微加深一点点，看得清网格 */ text-align: center; padding: 4px; height: 50px; vertical-align: top; }
+        /* 🟢 排程表格基础样式 */
+        .scheduler-table th, .scheduler-table td { border: 1px solid #dcdcdc; text-align: center; padding: 4px; height: 50px; vertical-align: top; }
         
-        /* 🟢 表头样式微调：高度增加，容纳两行文字 */
+        /* 🟢 表头样式 */
         .scheduler-table th { 
             background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; 
             font-size: 12px; font-weight: 600; 
@@ -141,7 +141,7 @@
         
         .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #cbd5e0; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
         
-        /* 🟢 默认单元格设为浅灰（工作日） */
+        /* 🟢 默认单元格 */
         .scheduler-table td { background-color: #edf2f7; }
 
         /* 🟢 颜色加深区域 (Deepened Colors for TV) */
@@ -157,8 +157,8 @@
         .bg-holiday { 
             background-color: #fed7d7 !important; /* 明显的粉红 */
             color: #742a2a !important; 
-            border-left: 1px solid #e53e3e !important; /* 改为 1px */
-            border-right: 1px solid #e53e3e !important; /* 改为 1px */
+            border-left: 1px solid #e53e3e !important; /* 1px 细线 */
+            border-right: 1px solid #e53e3e !important; /* 1px 细线 */
         } 
         
         /* 调休 */
@@ -232,6 +232,7 @@
         .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #4a5568; }
         .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: var(--font-stack); font-size: 14px; transition: all 0.2s; }
         .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+        .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: var(--font-stack); font-size: 12px; }
         #syncStatus { font-size: 12px; color: #a0aec0; margin-left: 10px; font-weight: 600; }
         
         /* 演示模式样式 */
@@ -358,7 +359,7 @@
         <h3 style="margin-top:0; color:var(--primary); font-weight:800; font-size:24px; margin-bottom:24px;">📝 任务详情 / Task</h3>
         <input type="hidden" id="editIndex">
         <div class="form-row">
-            <div class="form-group"><label>工作类型</label><select id="inType"><option value="PM">PM</option><option value="Project">Project</option><option value="Adhoc">Adhoc</option></select></div>
+            <div class="form-group"><label>工作类型</label><select id="inType"><option value="PM">🛠️ PM (预防维护)</option><option value="Project">🚧 Project (施工改造)</option><option value="Adhoc">⚡ Adhoc (临时抢修)</option></select></div>
             <div class="form-group"><label>时间 (HH:MM)</label><input type="text" id="inTime" placeholder="例如: 14:00"></div>
         </div>
         <div class="form-row" style="background:#f7fafc; padding:15px; border-radius:12px; border:1px solid #edf2f7; margin-bottom:15px;">
@@ -372,7 +373,7 @@
             <div class="form-group"><label>备注 Remarks</label><input type="text" id="inRemarks"></div>
         </div>
         <div class="form-group"><label>人员 Person (Comma separated)</label><input type="text" id="inPerson"></div>
-        <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned</option><option value="InProgress">InProgress</option><option value="Done">Done</option><option value="Overdue">Overdue</option></select></div>
+        <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned (Blue)</option><option value="InProgress">In Progress (Orange)</option><option value="Done">Done (Green)</option><option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (Force Flag)</option></select></div>
         <div style="text-align:right; margin-top:30px;">
             <button class="btn" style="background:#edf2f7; color:#4a5568" onclick="closeModal()">Cancel</button>
             <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">Save to Cloud</button>
@@ -382,9 +383,21 @@
 
 <div id="configModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0">⚙️ 配置</h3>
+        <h3 style="margin-top:0">⚙️ 配置与节假日</h3>
         <div class="form-group"><label>Bin ID</label><input type="text" id="cfgBinId"></div>
         <div class="form-group"><label>API Key</label><input type="password" id="cfgApiKey"></div>
+        
+        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+        
+        <div class="form-group">
+            <label>🧧 节假日配置 (YYYY-MM-DD, 逗号分隔)</label>
+            <textarea id="cfgHolidays" rows="4" placeholder="例如: 2026-01-01, 2026-01-02..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>💼 调休上班日配置 (YYYY-MM-DD, 逗号分隔)</label>
+            <textarea id="cfgMakeupDays" rows="2" placeholder="例如: 2026-02-15..."></textarea>
+        </div>
+
         <div style="text-align:right; margin-top:20px;">
             <button class="btn" style="background:#ddd; color:#333" onclick="closeConfigModal()">Cancel</button>
             <button class="btn btn-add" onclick="saveConfig()">Save Config</button>
@@ -399,8 +412,23 @@
     let API_KEY = localStorage.getItem('cs_work_api_key') || REAL_API_KEY;
     let API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    const HOLIDAYS = ['2026-01-01','2026-01-02','2026-01-03','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20','2026-02-21','2026-02-22','2026-04-04','2026-04-05','2026-04-06','2026-05-01','2026-05-02','2026-05-03','2026-05-04','2026-05-05','2026-06-19','2026-06-20','2026-06-21','2026-09-25','2026-09-26','2026-09-27','2026-10-01','2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07'];
-    const MAKEUP_WORKDAYS = ['2026-02-15','2026-02-28','2026-04-26','2026-05-09','2026-09-27','2026-10-10'];
+    // 默认数据 (如果云端没有配置，则使用此默认值)
+    const DEFAULT_HOLIDAYS = [
+        '2026-01-01', '2026-01-02', '2026-01-03', // 元旦
+        '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23', // 春节(9天)
+        '2026-04-04', '2026-04-05', '2026-04-06', // 清明
+        '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05', // 劳动节
+        '2026-06-19', '2026-06-20', '2026-06-21', // 端午
+        '2026-09-25', '2026-09-26', '2026-09-27', // 中秋
+        '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07' // 国庆
+    ];
+    const DEFAULT_MAKEUP_WORKDAYS = [
+        '2026-02-14', '2026-02-28', // 春节调休
+        '2026-04-26', '2026-05-09', // 劳动节调休
+        '2026-09-27', '2026-10-10'  // 国庆调休
+    ];
+
+    let appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS };
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
 
     let workData = []; let isEditing = false; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
@@ -434,9 +462,10 @@
 
     function getDateDisplay(start, end) {
         const s = normalizeDateStr(start); const e = normalizeDateStr(end); if (!s) return { html: '', raw: '' };
-        const dateObj = new Date(s.replace(/-/g, '/')); const day = dateObj.getDay(); const isMakeup = MAKEUP_WORKDAYS.includes(s);
+        const dateObj = new Date(s.replace(/-/g, '/')); const day = dateObj.getDay(); 
+        const isMakeup = appConfig.makeupDays.includes(s);
         let badge = '';
-        if (HOLIDAYS.includes(s)) badge = `<span class="tag tag-holiday">🧧 节假日</span>`;
+        if (appConfig.holidays.includes(s)) badge = `<span class="tag tag-holiday">🧧 节假日</span>`;
         else if (isMakeup) badge = `<span class="tag tag-makeup">💼 班 (调休)</span>`;
         else if (day === 0 || day === 6) badge = `<span class="tag tag-weekend">🏖️ 周末</span>`;
         let html = `<div>${badge} <b style="font-size:14px;color:#2d3748;font-family:inherit;">${s}</b></div>`;
@@ -463,7 +492,26 @@
 
     async function fetchData() {
         if(isEditing) return; updateStatus('🔄 同步中...');
-        try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("连接失败(401/403)"); const json = await res.json(); if (json.record && Array.isArray(json.record.tasks)) { workData = json.record.tasks; } else if (json.tasks && Array.isArray(json.tasks)) { workData = json.tasks; } else { workData = []; } if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); else refreshView(); updateStatus('✅ 已同步'); } catch (e) { updateStatus('❌ ' + e.message); }
+        try { 
+            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); 
+            if(!res.ok) throw new Error("连接失败"); 
+            const json = await res.json(); 
+            
+            // 数据解析
+            if (json.record && json.record.tasks) { workData = json.record.tasks; }
+            else if (json.tasks) { workData = json.tasks; } 
+            else { workData = []; }
+
+            // 🟢 读取云端配置 (节假日)
+            if (json.record && json.record.config) {
+                appConfig = json.record.config;
+            } else {
+                appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS }; // Fallback
+            }
+
+            if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); else refreshView(); 
+            updateStatus('✅ 已同步'); 
+        } catch (e) { updateStatus('❌ ' + e.message); }
     }
 
     function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); }
@@ -510,10 +558,10 @@
     function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
     function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
     function drag(ev, id) { ev.dataTransfer.setData("text", id); }
-    async function drop(ev, newStatus) { ev.preventDefault(); ev.currentTarget.classList.remove('drag-over'); var taskId = ev.dataTransfer.getData("text"); if (workData[taskId] && workData[taskId].status !== newStatus) { workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...'); try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); updateStatus('✅ 已更新'); } catch(e) { updateStatus('❌ 失败'); } } }
+    async function drop(ev, newStatus) { ev.preventDefault(); ev.currentTarget.classList.remove('drag-over'); var taskId = ev.dataTransfer.getData("text"); if (workData[taskId] && workData[taskId].status !== newStatus) { workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...'); try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); updateStatus('✅ 已更新'); } catch(e) { updateStatus('❌ 失败'); } } }
 
-    async function saveData() { const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("Err"); const json = await res.json(); let latestTasks = json.record.tasks || []; const idx = document.getElementById('editIndex').value; const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value }; if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task; workData = latestTasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); closeModal(); refreshView(); updateStatus('✅ 保存成功'); } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; } }
-    async function delItem(idx) { if(!confirm("删除?")) return; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); const json = await res.json(); let tasks = json.record.tasks || []; if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData }) }); refreshView(); updateStatus('✅ 删除成功'); } } catch (e) { alert("删除失败"); } }
+    async function saveData() { const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("Err"); const json = await res.json(); let latestTasks = json.record.tasks || []; const idx = document.getElementById('editIndex').value; const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value }; if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task; workData = latestTasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); closeModal(); refreshView(); updateStatus('✅ 保存成功'); } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; } }
+    async function delItem(idx) { if(!confirm("删除?")) return; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); const json = await res.json(); let tasks = json.record.tasks || []; if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); refreshView(); updateStatus('✅ 删除成功'); } } catch (e) { alert("删除失败"); } }
 
     function renderScheduler() {
         const table = document.getElementById('schedulerTable');
@@ -527,7 +575,7 @@
         const daysInMonth = new Date(year, month, 0).getDate();
         const now = new Date();
         
-        // 🟢 增加星期显示逻辑
+        // 🟢 星期显示逻辑
         const WEEK_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
         let thead = '<thead><tr><th class="col-person" style="background:#fff;color:#2d3748;z-index:20">人员 / 日期</th>';
@@ -535,9 +583,11 @@
             const dateObj = new Date(year, month-1, d);
             const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
             const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const isHoliday = HOLIDAYS.includes(dateStr);
+            
+            // 🟢 使用动态配置的节假日
+            const isHoliday = appConfig.holidays.includes(dateStr);
+            const isMakeup = appConfig.makeupDays.includes(dateStr); 
             const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
-            const isMakeup = MAKEUP_WORKDAYS.includes(dateStr); 
 
             // 获取星期字符串
             const weekStr = WEEK_NAMES[dateObj.getDay()];
@@ -545,13 +595,13 @@
             let bg = '#f8fafc'; // 默认表头背景（工作日）
             let thClass = '';
             
-            // 🟢 修改点：颜色加深逻辑
+            // 🟢 颜色加深逻辑
             if (isToday) { bg = ''; thClass = 'th-today'; }
             else if (isHoliday) bg = '#fed7d7';  /* 明显粉红 */
             else if (isMakeup) bg = '#fff'; 
             else if (isWeekend) bg = '#fcebd0'; /* 明显橙色 */
             
-            // 🟢 修改点：添加星期显示
+            // 🟢 表头：添加星期显示
             thead += `<th class="${thClass}" style="background:${bg}; min-width:36px;">
                         ${d}<br>
                         <span style="font-size:9px; font-weight:normal; opacity:0.8;">${weekStr}</span>
@@ -573,8 +623,10 @@
                 const dateObj = new Date(year, month-1, d);
                 const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const isHoliday = HOLIDAYS.includes(cellDateStr);
-                const isMakeup = MAKEUP_WORKDAYS.includes(cellDateStr);
+                
+                // 🟢 使用动态配置
+                const isHoliday = appConfig.holidays.includes(cellDateStr);
+                const isMakeup = appConfig.makeupDays.includes(cellDateStr);
                 const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
                 
                 let cellClass = 'cell-clickable';
@@ -625,9 +677,51 @@
     function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; if(document.getElementById('inPerson').value === '') { document.getElementById('inPerson').value = currentUser; } }
     function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
     function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools; document.getElementById('inRemarks').value=i.remarks; }
-    function openConfigModal() { document.getElementById('configModal').style.display='block'; isEditing=true; }
+    
+    // 🟢 配置相关逻辑
+    function openConfigModal() { 
+        document.getElementById('configModal').style.display='block'; 
+        isEditing=true; 
+        document.getElementById('cfgBinId').value = BIN_ID;
+        // 填充节假日数据到文本框
+        document.getElementById('cfgHolidays').value = appConfig.holidays.join(', ');
+        document.getElementById('cfgMakeupDays').value = appConfig.makeupDays.join(', ');
+    }
+    
     function closeConfigModal() { document.getElementById('configModal').style.display='none'; isEditing=false; }
-    function saveConfig() { const nid=document.getElementById('cfgBinId').value.trim(), nkey=document.getElementById('cfgApiKey').value.trim(); if(nid&&nkey){localStorage.setItem('cs_work_bin_id',nid);localStorage.setItem('cs_work_api_key',nkey);BIN_ID=nid;API_KEY=nkey;API_URL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;closeConfigModal();fetchData();} }
+    
+    async function saveConfig() { 
+        const nid=document.getElementById('cfgBinId').value.trim();
+        const nkey=document.getElementById('cfgApiKey').value.trim();
+        
+        // 解析文本框中的日期
+        const hStr = document.getElementById('cfgHolidays').value;
+        const mStr = document.getElementById('cfgMakeupDays').value;
+        const newHolidays = hStr.split(/,|，/).map(s=>s.trim()).filter(s=>s.match(/^\d{4}-\d{2}-\d{2}$/));
+        const newMakeupDays = mStr.split(/,|，/).map(s=>s.trim()).filter(s=>s.match(/^\d{4}-\d{2}-\d{2}$/));
+
+        if(nid){
+            localStorage.setItem('cs_work_bin_id',nid);
+            if(nkey) localStorage.setItem('cs_work_api_key',nkey);
+            BIN_ID=nid; API_KEY=nkey || API_KEY; API_URL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;
+            
+            // 更新本地配置对象
+            appConfig.holidays = newHolidays;
+            appConfig.makeupDays = newMakeupDays;
+
+            // 保存到云端
+            try {
+                await fetch(API_URL, { 
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, 
+                    body: JSON.stringify({ tasks: workData, config: appConfig }) 
+                });
+                alert("配置已保存!");
+                closeConfigModal();
+                fetchData();
+            } catch(e) { alert("保存失败: " + e.message); }
+        }
+    }
 </script>
 </body>
 </html>
