@@ -424,11 +424,11 @@
     ];
     const DEFAULT_MAKEUP_WORKDAYS = [
         '2026-02-14', '2026-02-28', // 春节调休
-        '2026-04-26', '2026-05-09', // 劳动节调休
+        '2026-05-09', // 劳动节调休
         '2026-09-27', '2026-10-10'  // 国庆调休
     ];
 
-    let appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS };
+    let appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS, personOrder: [] };
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
 
     let workData = []; let isEditing = false; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
@@ -506,7 +506,7 @@
             if (json.record && json.record.config) {
                 appConfig = json.record.config;
             } else {
-                appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS }; // Fallback
+                appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS, personOrder: [] }; // Fallback
             }
 
             if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); else refreshView(); 
@@ -575,7 +575,6 @@
         const daysInMonth = new Date(year, month, 0).getDate();
         const now = new Date();
         
-        // 🟢 星期显示逻辑
         const WEEK_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
         let thead = '<thead><tr><th class="col-person" style="background:#fff;color:#2d3748;z-index:20">人员 / 日期</th>';
@@ -583,25 +582,19 @@
             const dateObj = new Date(year, month-1, d);
             const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
             const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            
-            // 🟢 使用动态配置的节假日
             const isHoliday = appConfig.holidays.includes(dateStr);
             const isMakeup = appConfig.makeupDays.includes(dateStr); 
             const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
-
-            // 获取星期字符串
             const weekStr = WEEK_NAMES[dateObj.getDay()];
 
-            let bg = '#f8fafc'; // 默认表头背景（工作日）
+            let bg = '#f8fafc'; 
             let thClass = '';
             
-            // 🟢 颜色加深逻辑
             if (isToday) { bg = ''; thClass = 'th-today'; }
-            else if (isHoliday) bg = '#fed7d7';  /* 明显粉红 */
+            else if (isHoliday) bg = '#fed7d7'; 
             else if (isMakeup) bg = '#fff'; 
-            else if (isWeekend) bg = '#fcebd0'; /* 明显橙色 */
+            else if (isWeekend) bg = '#fcebd0'; 
             
-            // 🟢 表头：添加星期显示
             thead += `<th class="${thClass}" style="background:${bg}; min-width:36px;">
                         ${d}<br>
                         <span style="font-size:9px; font-weight:normal; opacity:0.8;">${weekStr}</span>
@@ -613,20 +606,39 @@
         let people = new Set();
         const indexedData = workData.map((item, index) => ({ ...item, _id: index }));
         workData.forEach(t => { if(t.person) t.person.split(/,|，/).forEach(p => people.add(p.trim())); });
-        const personList = Array.from(people).sort();
+        
+        // 🟢 处理人员列表逻辑（带排序支持）
+        let personList;
+        if (appConfig.personOrder && appConfig.personOrder.length > 0) {
+            let configOrder = appConfig.personOrder;
+            // 补全不在 configOrder 里的新人员
+            Array.from(people).forEach(p => { if(!configOrder.includes(p)) configOrder.push(p); });
+            // 过滤已经不再存在的旧人员
+            personList = configOrder.filter(p => people.has(p));
+        } else {
+            personList = Array.from(people).sort();
+        }
 
         let tbody = '<tbody>';
         personList.forEach(p => {
             if(!p) return;
-            tbody += `<tr><td class="col-person">${p}</td>`;
+            // 🟢 加入排序按钮
+            tbody += `<tr>
+                <td class="col-person">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding: 0 4px;">
+                        <span>${p}</span>
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <button onclick="movePerson('${p}', -1)" style="padding:0; border:none; background:none; cursor:pointer; font-size:10px; color:#a0aec0;" title="上移">▲</button>
+                            <button onclick="movePerson('${p}', 1)" style="padding:0; border:none; background:none; cursor:pointer; font-size:10px; color:#a0aec0;" title="下移">▼</button>
+                        </div>
+                    </div>
+                </td>`;
             for(let d=1; d<=daysInMonth; d++) {
                 const dateObj = new Date(year, month-1, d);
-                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                
-                // 🟢 使用动态配置
                 const isHoliday = appConfig.holidays.includes(cellDateStr);
                 const isMakeup = appConfig.makeupDays.includes(cellDateStr);
+                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
                 
                 let cellClass = 'cell-clickable';
@@ -651,6 +663,43 @@
         });
         tbody += '</tbody>';
         table.innerHTML += tbody;
+    }
+
+    // 🟢 新增的移动排序功能
+    async function movePerson(personName, direction) {
+        // 1. 获取当前人员列表
+        let people = new Set();
+        workData.forEach(t => { if(t.person) t.person.split(/,|，/).forEach(p => people.add(p.trim())); });
+        let personList;
+        if (appConfig.personOrder && appConfig.personOrder.length > 0) {
+            let configOrder = appConfig.personOrder;
+            Array.from(people).forEach(p => { if(!configOrder.includes(p)) configOrder.push(p); });
+            personList = configOrder.filter(p => people.has(p));
+        } else {
+            personList = Array.from(people).sort();
+        }
+
+        const currentIndex = personList.indexOf(personName);
+        const targetIndex = currentIndex + direction;
+
+        if (targetIndex < 0 || targetIndex >= personList.length) return;
+
+        // 2. 交换位置
+        [personList[currentIndex], personList[targetIndex]] = [personList[targetIndex], personList[currentIndex]];
+
+        // 3. 更新配置并同步到云端
+        appConfig.personOrder = personList;
+        renderScheduler(); // 即时刷新
+
+        try {
+            updateStatus('🔄 同步排序中...');
+            await fetch(API_URL, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, 
+                body: JSON.stringify({ tasks: workData, config: appConfig }) 
+            });
+            updateStatus('✅ 排序已同步');
+        } catch(e) { updateStatus('❌ 同步排序失败'); }
     }
 
     function openModalWithDate(date, person) { openModal(); document.getElementById('inDate').value = date; document.getElementById('inPerson').value = person; }
@@ -678,12 +727,10 @@
     function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
     function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools; document.getElementById('inRemarks').value=i.remarks; }
     
-    // 🟢 配置相关逻辑
     function openConfigModal() { 
         document.getElementById('configModal').style.display='block'; 
         isEditing=true; 
         document.getElementById('cfgBinId').value = BIN_ID;
-        // 填充节假日数据到文本框
         document.getElementById('cfgHolidays').value = appConfig.holidays.join(', ');
         document.getElementById('cfgMakeupDays').value = appConfig.makeupDays.join(', ');
     }
@@ -693,8 +740,6 @@
     async function saveConfig() { 
         const nid=document.getElementById('cfgBinId').value.trim();
         const nkey=document.getElementById('cfgApiKey').value.trim();
-        
-        // 解析文本框中的日期
         const hStr = document.getElementById('cfgHolidays').value;
         const mStr = document.getElementById('cfgMakeupDays').value;
         const newHolidays = hStr.split(/,|，/).map(s=>s.trim()).filter(s=>s.match(/^\d{4}-\d{2}-\d{2}$/));
@@ -705,11 +750,9 @@
             if(nkey) localStorage.setItem('cs_work_api_key',nkey);
             BIN_ID=nid; API_KEY=nkey || API_KEY; API_URL=`https://api.jsonbin.io/v3/b/${BIN_ID}`;
             
-            // 更新本地配置对象
             appConfig.holidays = newHolidays;
             appConfig.makeupDays = newMakeupDays;
 
-            // 保存到云端
             try {
                 await fetch(API_URL, { 
                     method: 'PUT', 
