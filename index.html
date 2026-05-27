@@ -198,6 +198,7 @@
 
         .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; height: calc(100vh - 160px); overflow-x: auto; padding-bottom: 20px; } 
         .kanban-col { background: #edf2f7; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; min-width: 280px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); }
+        .kanban-col Img { display: none; }
         .kanban-header { font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #cbd5e0; display: flex; justify-content: space-between; align-items: center; color: #4a5568; font-size: 14px; letter-spacing: 0.5px; }
         .kanban-count { background: white; border-radius: 20px; padding: 2px 10px; font-size: 11px; color: #718096; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: 700;}
         .kanban-list { flex: 1; overflow-y: auto; padding-right: 4px; min-height: 100px; }
@@ -493,17 +494,24 @@
     async function fetchData() {
         if(isEditing) return; updateStatus('🔄 同步中...');
         try { 
-            const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); 
+            const res = await fetch(API_URL, { 
+                headers: { 
+                    'X-Master-Key': API_KEY,
+                    'X-Bin-Meta': 'false'
+                } 
+            }); 
             if(!res.ok) throw new Error("连接失败"); 
             const json = await res.json(); 
             
             // 数据解析
-            if (json.record && json.record.tasks) { workData = json.record.tasks; }
-            else if (json.tasks) { workData = json.tasks; } 
+            if (json.tasks) { workData = json.tasks; } 
+            else if (json.record && json.record.tasks) { workData = json.record.tasks; }
             else { workData = []; }
 
             // 🟢 读取云端配置 (节假日)
-            if (json.record && json.record.config) {
+            if (json.config) {
+                appConfig = json.config;
+            } else if (json.record && json.record.config) {
                 appConfig = json.record.config;
             } else {
                 appConfig = { holidays: DEFAULT_HOLIDAYS, makeupDays: DEFAULT_MAKEUP_WORKDAYS, personOrder: [] }; // Fallback
@@ -558,10 +566,10 @@
     function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
     function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
     function drag(ev, id) { ev.dataTransfer.setData("text", id); }
-    async function drop(ev, newStatus) { ev.preventDefault(); ev.currentTarget.classList.remove('drag-over'); var taskId = ev.dataTransfer.getData("text"); if (workData[taskId] && workData[taskId].status !== newStatus) { workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...'); try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); updateStatus('✅ 已更新'); } catch(e) { updateStatus('❌ 失败'); } } }
+    async function drop(ev, newStatus) { ev.preventDefault(); ev.currentTarget.classList.remove('drag-over'); var taskId = ev.dataTransfer.getData("text"); if (workData[taskId] && workData[taskId].status !== newStatus) { workData[taskId].status = newStatus; refreshView(); updateStatus('🔄 同步状态...'); try { await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); updateStatus('✅ 已更新'); } catch(e) { updateStatus('❌ 失败'); } } }
 
-    async function saveData() { const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); if(!res.ok) throw new Error("Err"); const json = await res.json(); let latestTasks = json.record.tasks || []; const idx = document.getElementById('editIndex').value; const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value }; if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task; workData = latestTasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); closeModal(); refreshView(); updateStatus('✅ 保存成功'); } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; } }
-    async function delItem(idx) { if(!confirm("删除?")) return; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } }); const json = await res.json(); let tasks = json.record.tasks || []; if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); refreshView(); updateStatus('✅ 删除成功'); } } catch (e) { alert("删除失败"); } }
+    async function saveData() { const btn = document.querySelector('#taskModal .btn-add'); const origin = btn.innerText; btn.innerText='⏳...'; btn.disabled=true; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' } }); if(!res.ok) throw new Error("Err"); const json = await res.json(); let latestTasks = json.tasks || json.record?.tasks || []; const idx = document.getElementById('editIndex').value; const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value }; if(idx === '-1') latestTasks.push(task); else latestTasks[idx] = task; workData = latestTasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); closeModal(); refreshView(); updateStatus('✅ 保存成功'); } catch (e) { alert("Save Failed"); } finally { btn.innerText=origin; btn.disabled=false; } }
+    async function delItem(idx) { if(!confirm("删除?")) return; try { const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' } }); const json = await res.json(); let tasks = json.tasks || json.record?.tasks || []; if(tasks[idx]) { tasks.splice(idx, 1); workData = tasks; await fetch(API_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }, body: JSON.stringify({ tasks: workData, config: appConfig }) }); refreshView(); updateStatus('✅ 删除成功'); } } catch (e) { alert("删除失败"); } }
 
     function renderScheduler() {
         const table = document.getElementById('schedulerTable');
@@ -695,7 +703,7 @@
             updateStatus('🔄 同步排序中...');
             await fetch(API_URL, { 
                 method: 'PUT', 
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, 
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }, 
                 body: JSON.stringify({ tasks: workData, config: appConfig }) 
             });
             updateStatus('✅ 排序已同步');
@@ -756,7 +764,7 @@
             try {
                 await fetch(API_URL, { 
                     method: 'PUT', 
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY }, 
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }, 
                     body: JSON.stringify({ tasks: workData, config: appConfig }) 
                 });
                 alert("配置已保存!");
