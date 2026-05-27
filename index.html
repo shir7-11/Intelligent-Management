@@ -146,6 +146,7 @@
 
         .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; height: calc(100vh - 160px); overflow-x: auto; padding-bottom: 20px; } 
         .kanban-col { background: #edf2f7; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; min-width: 280px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); }
+        .kanban-col.drag-over { background: #cbd5e0; border: 2px dashed #4299e1; }
         .kanban-header { font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #cbd5e0; display: flex; justify-content: space-between; align-items: center; color: #4a5568; font-size: 14px; letter-spacing: 0.5px; }
         .kanban-count { background: white; border-radius: 20px; padding: 2px 10px; font-size: 11px; color: #718096; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: 700;}
         .kanban-list { flex: 1; overflow-y: auto; padding-right: 4px; min-height: 100px; }
@@ -261,10 +262,10 @@
 
     <div id="kanbanView">
         <div class="kanban-board">
-            <div class="kanban-col"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)"></div></div>
-            <div class="kanban-col"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)"></div></div>
-            <div class="kanban-col"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)"></div></div>
-            <div class="kanban-col"><div class="kanban-header" style="color:#e53e3e"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)"></div></div>
+            <div class="kanban-col" id="panel-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned"></div></div>
+            <div class="kanban-col" id="panel-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress"></div></div>
+            <div class="kanban-col" id="panel-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done"></div></div>
+            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header" style="color:#e53e3e"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
         </div>
     </div>
 
@@ -314,11 +315,9 @@
 </div>
 
 <script>
-    // 基础节假日配置
     const DEFAULT_HOLIDAYS = ['2026-01-01', '2026-01-02', '2026-01-03', '2026-02-15', '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', '2026-02-21', '2026-02-22', '2026-02-23', '2026-04-04', '2026-04-05', '2026-04-06', '2026-05-01', '2026-05-02', '2026-05-03', '2026-05-04', '2026-05-05', '2026-06-19', '2026-06-20', '2026-06-21', '2026-09-25', '2026-09-26', '2026-09-27', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'];
     const DEFAULT_MAKEUP_WORKDAYS = ['2026-02-14', '2026-02-28', '2026-04-26', '2026-05-09', '2026-09-27', '2026-10-10'];
 
-    // 核心历史排班初始化数据
     const INITIAL_TASKS = [
         {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"沉降观测","person":"张海滨","status":"Done"},
         {"type":"PM","date":"2026-05-24","time":"16:00-18:00","location":"131生产楼","event":"131空调年度维护 --9401月度,131空调排风机年度","person":"郭洪","status":"Planned","remarks":"中班"},
@@ -464,7 +463,7 @@
         {"type":"PM","date":"2026-04-25","endDate":"2026-04-26","location":"131生产楼","event":"纯水机消毒","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-04-23","endDate":"2026-04-23","location":"IOA","event":"IOA冷热水质取样 加药系统维保","person":"魏香委","status":"Done"},
         {"type":"PM","date":"2026-04-24","endDate":"2026-04-24","location":"IOA","event":"IOA  热泵月度维护","person":"魏香委","status":"Done"},
-        {"type":"PM","date":"2026-04-27","endDate":"2026-04-27","location":"211","event":"行政楼主动式冷梁（检查，清洁）","person":"杨宏，郭洪，陈苏宁，张文献","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-04-27","endDate":"2026-04-27","location":"211","event":"行政楼主动式冷梁（檢查，清潔）","person":"杨宏，郭洪，陈苏宁，张文献","status":"Done","remarks":"中班"},
         {"type":"PM","date":"2026-05-12","location":"113质检楼","event":"cobas 校准","person":"项敏","status":"Done"},
         {"type":"PM","date":"2026-04-29","endDate":"2026-04-29","location":"CUB","event":"氨机月度维护","person":"魏香委","status":"Done"},
         {"type":"PM","date":"2026-05-24","location":"外围","event":"天然气年度维护","person":"刘文杰","status":"Planned","remarks":"JSA"},
@@ -510,12 +509,11 @@
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
     let workData = []; let isEditing = false; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
 
-    // 🔴 核心逻辑重写：全面改用 LocalStorage 本地数据库
     function initLocalStorage() {
-        if (!localStorage.getItem('cs_work_data_v2')) {
-            localStorage.setItem('cs_work_data_v2', JSON.stringify(INITIAL_TASKS));
+        if (!localStorage.getItem('cs_work_data_v3')) {
+            localStorage.setItem('cs_work_data_v3', JSON.stringify(INITIAL_TASKS));
         }
-        workData = JSON.parse(localStorage.getItem('cs_work_data_v2'));
+        workData = JSON.parse(localStorage.getItem('cs_work_data_v3'));
     }
 
     function checkLogin() {
@@ -538,12 +536,18 @@
     function fetchData() {
         initLocalStorage();
         updateStatus('🟢 本地数据库就绪');
+        
+        // 🔄 强制初始化全局默认月份
+        const schMonth = document.getElementById('schMonth');
+        if (schMonth && !schMonth.value) {
+            schMonth.value = "2026-05"; // 默认聚焦到含有丰富测试数据的2026年5月
+        }
+        
         if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); else refreshView(); 
     }
 
     function saveToLocalDB() {
-        localStorage.setItem('cs_work_data_v2', JSON.stringify(workData));
-        updateStatus('🟢 数据已自动暂存浏览器');
+        localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
     }
 
     function normalizeDateStr(dateStr) {
@@ -572,14 +576,34 @@
 
     function switchView(viewName) {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.view-btn[onclick*="${viewName}"]`).classList.add('active');
-        ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => document.getElementById(id).classList.remove('show-view'));
-        document.getElementById(viewName + 'View').classList.add('show-view');
-        const schCtrl = document.getElementById('schedulerControls'); const comCtrl = document.getElementById('commonControls');
-        if(viewName === 'scheduler') { schCtrl.style.display = 'flex'; comCtrl.style.display = 'none'; renderScheduler(); } else { schCtrl.style.display = 'none'; comCtrl.style.display = 'flex'; if(viewName === 'kanban') renderKanban(); if(viewName === 'dashboard') renderDashboard(); if(viewName === 'list') renderTable(); }
+        const activeBtn = document.querySelector(`.view-btn[onclick*="${viewName}"]`);
+        if(activeBtn) activeBtn.classList.add('active');
+        
+        ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.remove('show-view');
+        });
+        
+        const targetView = document.getElementById(viewName + 'View');
+        if(targetView) targetView.classList.add('show-view');
+        
+        const schCtrl = document.getElementById('schedulerControls'); 
+        const comCtrl = document.getElementById('commonControls');
+        
+        if(viewName === 'scheduler') { 
+            if(schCtrl) schCtrl.style.display = 'flex'; 
+            if(comCtrl) comCtrl.style.display = 'none'; 
+            renderScheduler(); 
+        } else { 
+            if(schCtrl) schCtrl.style.display = 'none'; 
+            if(comCtrl) comCtrl.style.display = 'flex'; 
+            if(viewName === 'kanban') renderKanban(); 
+            if(viewName === 'dashboard') renderDashboard(); 
+            if(viewName === 'list') renderTable(); 
+        }
     }
+    
     function enterPresentationMode() { switchView('scheduler'); const elem = document.documentElement; if (elem.requestFullscreen) elem.requestFullscreen(); }
-
     function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); }
 
     function getFilteredData() {
@@ -607,8 +631,14 @@
 
     function exportToCSV() { const filtered = getFilteredData(); if(filtered.length === 0) return alert("没有数据可导出"); let csvContent = "data:text/csv;charset=utf-8,\uFEFFType,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; filtered.forEach(row => { csvContent += [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '')}"`, `"${(row.tools || '')}"`, `"${(row.remarks || '')}"`, `"${(row.person || '')}"`, row.status || '' ].join(",") + "\n"; }); const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `CS_Local_Export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
+    // 🏗️ 看板模块功能全面重构（修复卡片高度及拖拽失败）
     function renderKanban() {
-        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { document.getElementById(`col-${s}`).innerHTML=''; document.getElementById(`count-${s}`).innerText='0'; });
+        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { 
+            const colEl = document.getElementById(`col-${s}`);
+            if(colEl) colEl.innerHTML=''; 
+            const countEl = document.getElementById(`count-${s}`);
+            if(countEl) countEl.innerText='0'; 
+        });
         const filtered = getFilteredData(); let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
         const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
         filtered.forEach(item => {
@@ -618,13 +648,31 @@
             const dateDisplay = getDateDisplay(item.date, item.endDate);
             const card = document.createElement('div'); card.className = `kanban-card card-${visualStatus}`; card.draggable = true; card.setAttribute('ondragstart', `drag(event, ${item._id})`);
             card.innerHTML = `<div class="k-title">${item.event}</div><div class="k-meta"><span>📅 ${dateDisplay.raw}</span><span>📍 ${item.location}</span></div><div class="k-footer"><span class="k-person">👤 ${item.person||''}</span><button class="btn-edit" onclick="editItem(${item._id})">✎</button></div>`;
-            document.getElementById(`col-${visualStatus}`).appendChild(card);
+            const colContainer = document.getElementById(`col-${visualStatus}`);
+            if(colContainer) colContainer.appendChild(card);
         });
-        for(let k in counts) document.getElementById(`count-${k}`).innerText = counts[k];
+        for(let k in counts) {
+            const countBox = document.getElementById(`count-${k}`);
+            if(countBox) countBox.innerText = counts[k];
+        }
     }
-    function allowDrop(ev) { ev.preventDefault(); }
-    function drag(ev, id) { ev.dataTransfer.setData("text", id); }
-    function drop(ev, newStatus) { ev.preventDefault(); var taskId = ev.dataTransfer.setData("text"); if (workData[taskId]) { workData[taskId].status = newStatus; saveToLocalDB(); refreshView(); } }
+    
+    // 🎛️ 修复核心拖拽API底层调用拼写错误
+    function allowDrop(ev) { ev.preventDefault(); const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.add('drag-over'); }
+    function dragLeave(ev) { const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.remove('drag-over'); }
+    function drag(ev, id) { ev.dataTransfer.setData("text/plain", id); }
+    function drop(ev, newStatus) { 
+        ev.preventDefault(); 
+        const parentCol = ev.currentTarget; 
+        if(parentCol) parentCol.classList.remove('drag-over'); 
+        
+        var taskId = ev.dataTransfer.getData("text/plain"); // 👈 核心修复：换用标准的 text/plain
+        if (taskId !== "" && workData[taskId]) { 
+            workData[taskId].status = newStatus; 
+            saveToLocalDB(); 
+            renderKanban(); 
+        } 
+    }
 
     function saveData() {
         const idx = document.getElementById('editIndex').value;
@@ -634,6 +682,7 @@
     }
     function delItem(idx) { if(confirm("确定删除本条排班记录吗?")) { workData.splice(idx, 1); saveToLocalDB(); refreshView(); } }
 
+    // 📅 修复核心排程表无法自动按月渲染框架的问题
     function renderScheduler() {
         const table = document.getElementById('schedulerTable'); table.innerHTML = '';
         const monthVal = document.getElementById('schMonth').value; if(!monthVal) return;
@@ -693,7 +742,7 @@
         
         let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 }, personMap = {}, locMap = {};
         workData.forEach(t => { 
-            typeMap[t.type || 'Other']++; 
+            if(typeMap.hasOwnProperty(t.type)) typeMap[t.type]++; else typeMap['Other']++;
             if(t.person) t.person.split(/,|，/).forEach(p => { if(p.trim()) personMap[p.trim()] = (personMap[p.trim()] || 0) + 1; });
             if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1;
         });
@@ -707,13 +756,14 @@
     
     function updateDropdowns() {
         const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter');
+        if(!ls || !ps) return;
         ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>';
         [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`);
         let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim())));
         [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`);
     }
     
-    function updateStatus(msg) { document.getElementById('syncStatus').innerText = msg; }
+    function updateStatus(msg) { const statusEl = document.getElementById('syncStatus'); if(statusEl) statusEl.innerText = msg; }
     function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; document.getElementById('inPerson').value = currentUser; }
     function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
     function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time || ''; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools || ''; document.getElementById('inRemarks').value=i.remarks || ''; }
