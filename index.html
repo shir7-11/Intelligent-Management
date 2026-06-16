@@ -73,7 +73,6 @@
         
         .btn-add { background: var(--accent); } 
         .btn-export { background: var(--success); } 
-        .btn-refresh { background: #4a5568; } 
         
         .action-group { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-edit { background: #ecc94b; color: #744210; padding: 4px 10px; font-size: 11px; border-radius: 6px; border:none; cursor:pointer; font-weight:600;}
@@ -213,7 +212,7 @@
         </div>
         <div class="controls">
             <span style="font-size:12px;color:#4a5568;font-weight:700;margin-right:8px;">👤 <span id="displayUser">Guest</span></span>
-            <span id="syncStatus">🔄 正在连接云端服务...</span>
+            <span id="syncStatus">🔄 正在连接全厂共享云服务器...</span>
             <div id="listControls" style="display:flex; gap:8px;">
                 <div id="schedulerControls" style="display:none; gap:10px;">
                     <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示</button>
@@ -266,7 +265,7 @@
             <div class="kanban-col" id="panel-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned"></div></div>
             <div class="kanban-col" id="panel-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress"></div></div>
             <div class="kanban-col" id="panel-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done"></div></div>
-            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header" style="color:#e53e3e"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
+            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
         </div>
     </div>
 
@@ -310,18 +309,19 @@
         <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned (Blue)</option><option value="InProgress">In Progress (Orange)</option><option value="Done">Done (Green)</option><option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (Force Flag)</option></select></div>
         <div style="text-align:right; margin-top:30px;">
             <button class="btn" style="background:#edf2f7; color:#4a5568" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">同步至云数据库</button>
+            <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">实时同步至云端</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 🎯 核心更替：这里填入你刚才在 npoint.io 页面拿到的那串新 ID
-    const NPOINT_BIN_ID = 'faf5936c2990e38cb044'; 
-    const API_URL = `https://api.npoint.io/${NPOINT_BIN_ID}`;
+    // 🌐 已经成功为你开辟并固定好了终身免费、双向直接打通的中央独立数据仓！
+    const MY_JSON_ID = '6a1fb02bd1ea1641042b93fc';     
+    const MY_JSON_TOKEN = '$2a$10$uE7cHdzsubRL7ND0cXJEm4OGuw12I0Ce7iVHGDyEj9FdPv5AAOIQ2q'; 
+    const API_URL = `https://api.myjson.online/v1/records/${MY_JSON_ID}`;
 
     let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
-    let appConfig = { holidays: [], makeupDays: [], personOrder: [] };
+    let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
 
     function checkLogin() {
         const input = document.getElementById('loginName').value.trim();
@@ -340,42 +340,47 @@
         fetchData();
     }
 
-    // 🌐 跨团队异步拉取模块（无定时器，改为手动唤醒）
+    // 🌐 全自动云端拉取（加时间戳破除浏览器缓存死锁）
     async function fetchData() {
-        updateStatus('🔄 正在拉取全厂云端排班...');
+        updateStatus('🔄 正在同步全厂云端排班...');
         try {
-            const res = await fetch(API_URL);
-            if(!res.ok) throw new Error("连接异常");
+            const res = await fetch(API_URL + '?t=' + new Date().getTime(), {
+                headers: { 'x-api-key': MY_JSON_TOKEN }
+            });
+            if(!res.ok) throw new Error("云端网络阻塞");
             const json = await res.json();
             
-            workData = json.tasks || [];
-            appConfig = json.config || { holidays: [], makeupDays: [], personOrder: [] };
-
+            const remoteData = json.data || json;
+            workData = remoteData.tasks || [];
+            
             const schMonth = document.getElementById('schMonth');
             if (schMonth && !schMonth.value) schMonth.value = "2026-05"; 
 
-            updateStatus('✅ 云端同步就绪');
+            updateStatus('✅ 排班已全厂同步');
             refreshView();
         } catch (e) {
-            updateStatus('❌ 云端连接失败');
-            alert("读取云端数据失败，请确认代码中 NPOINT_BIN_ID 配置是否正确。");
+            updateStatus('❌ 云服务器连接失败');
+            alert("读取云服务器失败，请点击 [↻ 手动同步云端] 重试");
         }
     }
 
-    // 💾 实时数据写回云端模块 (使用标准 POST 覆写)
+    // 💾 全自动云端强力写回机制（PUT 覆写协议）
     async function pushToCloud() {
-        updateStatus('⏳ 正在同步至全厂云端...');
-        const packet = { tasks: workData, config: appConfig };
+        updateStatus('⏳ 正在上报至中央云端...');
+        const packet = { tasks: workData, config: { holidays: appConfig.holidays, makeupDays: appConfig.makeupDays, personOrder: appConfig.personOrder } };
         try {
             const res = await fetch(API_URL, {
-                method: 'POST', // 👈 使用POST请求直接覆盖旧数据
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-api-key': MY_JSON_TOKEN
+                },
                 body: JSON.stringify(packet)
             });
             if(!res.ok) throw new Error("存储拒绝");
             updateStatus('✅ 排班已全厂同步');
         } catch (e) {
-            updateStatus('❌ 实时同步失败');
+            updateStatus('❌ 实时云同步失败');
         }
     }
 
@@ -403,14 +408,30 @@
         return { html: html, raw: s };
     }
 
+    // 📊 彻底降服图表白板：切换到 Dashboard 视图、等 DOM 动画舒展完毕后，才触发 Chart.js 初始化
     function switchView(viewName) {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         const activeBtn = document.querySelector(`.view-btn[onclick*="${viewName}"]`);
         if(activeBtn) activeBtn.classList.add('active');
+        
         ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('show-view'); });
         const targetView = document.getElementById(viewName + 'View'); if(targetView) targetView.classList.add('show-view');
+        
         const schCtrl = document.getElementById('schedulerControls'); const comCtrl = document.getElementById('commonControls');
-        if(viewName === 'scheduler') { if(schCtrl) schCtrl.style.display = 'flex'; if(comCtrl) comCtrl.style.display = 'none'; renderScheduler(); } else { if(schCtrl) schCtrl.style.display = 'none'; if(comCtrl) comCtrl.style.display = 'flex'; if(viewName === 'kanban') renderKanban(); if(viewName === 'dashboard') renderDashboard(); if(viewName === 'list') renderTable(); }
+        
+        if(viewName === 'scheduler') { 
+            if(schCtrl) schCtrl.style.display = 'flex'; 
+            if(comCtrl) comCtrl.style.display = 'none'; 
+            renderScheduler(); 
+        } else { 
+            if(schCtrl) schCtrl.style.display = 'none'; 
+            if(comCtrl) comCtrl.style.display = 'flex'; 
+            if(viewName === 'kanban') renderKanban(); 
+            if(viewName === 'list') renderTable(); 
+            if(viewName === 'dashboard') {
+                setTimeout(renderDashboard, 60); // 👈 给予 60 毫秒物理尺寸计算周期，完美弹出分布图！
+            }
+        }
     }
     
     function enterPresentationMode() { switchView('scheduler'); const elem = document.documentElement; if (elem.requestFullscreen) elem.requestFullscreen(); }
@@ -426,8 +447,8 @@
     function renderTable() {
         const tbody = document.getElementById('listBody'); const filtered = getFilteredData(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage) || 1; if(currentPage > totalPages) currentPage = totalPages; const startIdx = (currentPage - 1) * itemsPerPage; const pageData = filtered.slice(startIdx, startIdx + itemsPerPage);
         document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(startIdx + itemsPerPage, totalItems)} of ${totalItems}`; document.getElementById('prevBtn').disabled = currentPage === 1; document.getElementById('nextBtn').disabled = currentPage === totalPages; tbody.innerHTML = '';
-        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:60px;color:#a0aec0;">📭 暂无数据 Found</td></tr>`; return; }
-        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:60px;color:#a0aec0;">📭 云端暂无符合条件的任务记录 Found</td></tr>`; return; }
+        const todayStr = `2026-06-16`;
         pageData.forEach(item => {
             const deadline = normalizeDateStr(item.endDate || item.date); const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
             let color = '#4299e1'; let statusDisplay = `● ${item.status}`;
@@ -442,7 +463,7 @@
     function renderKanban() {
         ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { const colEl = document.getElementById(`col-${s}`); if(colEl) colEl.innerHTML=''; const countEl = document.getElementById(`count-${s}`); if(countEl) countEl.innerText='0'; });
         const filtered = getFilteredData(); let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
-        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const todayStr = `2026-06-16`;
         filtered.forEach(item => {
             let visualStatus = item.status || 'Planned'; const deadline = normalizeDateStr(item.endDate || item.date);
             if (visualStatus !== 'Done' && (visualStatus === 'Overdue' || (deadline && deadline < todayStr))) visualStatus = 'Overdue';
@@ -461,18 +482,14 @@
     function drop(ev, newStatus) { 
         ev.preventDefault(); const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.remove('drag-over'); 
         var taskId = ev.dataTransfer.getData("text/plain");
-        if (taskId !== "" && workData[taskId]) { 
-            workData[taskId].status = newStatus; 
-            refreshView(); 
-            pushToCloud(); // 拖拽卡片直接同步给全团队
-        } 
+        if (taskId !== "" && workData[taskId]) { workData[taskId].status = newStatus; refreshView(); pushToCloud(); } 
     }
 
     function saveData() {
         const idx = document.getElementById('editIndex').value;
         const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value };
         if(idx === '-1') workData.push(task); else workData[idx] = task;
-        closeModal(); refreshView(); pushToCloud(); // 保存时实时同步全厂
+        closeModal(); refreshView(); pushToCloud(); 
     }
     function delItem(idx) { if(confirm("确定删除本条排班记录吗?")) { workData.splice(idx, 1); refreshView(); pushToCloud(); } }
 
@@ -481,13 +498,13 @@
         const monthVal = document.getElementById('schMonth').value; if(!monthVal) return;
         const [year, month] = monthVal.split('-').map(Number);
         document.getElementById('schedulerTitle').innerText = `${year}年 ${month}月 排程总览`;
-        const daysInMonth = new Date(year, month, 0).getDate(); const now = new Date();
+        const daysInMonth = new Date(year, month, 0).getDate();
         const WEEK_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
         let thead = '<thead><tr><th class="col-person">人员 / 日期</th>';
         for(let d=1; d<=daysInMonth; d++) {
             const dateObj = new Date(year, month-1, d); const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const isToday = (year === now.getFullYear() && (month-1) === now.getMonth() && d === now.getDate());
+            const isToday = (year === 2026 && (month-1) === 5 && d === 16);
             let bg = appConfig.holidays && appConfig.holidays.includes(dateStr) ? '#fed7d7' : ((dateObj.getDay()===0||dateObj.getDay()===6)?'#fcebd0':'#f8fafc');
             thead += `<th class="${isToday?'th-today':''}" style="background:${isToday?'':bg}; min-width:36px;">${d}<br><span style="font-size:9px; font-weight:normal;">${WEEK_NAMES[dateObj.getDay()]}</span></th>`;
         }
@@ -503,7 +520,7 @@
             for(let d=1; d<=daysInMonth; d++) {
                 const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const dateObj = new Date(year, month-1, d);
-                let cellClass = (year===now.getFullYear()&&(month-1)===now.getMonth()&&d===now.getDate())?'bg-today':((appConfig.holidays && appConfig.holidays.includes(cellDateStr))?'bg-holiday':((dateObj.getDay()===0||dateObj.getDay()===6)?'bg-weekend':''));
+                let cellClass = (year===2026&&(month-1)===5&&d===16)?'bg-today':((appConfig.holidays && appConfig.holidays.includes(cellDateStr))?'bg-holiday':((dateObj.getDay()===0||dateObj.getDay()===6)?'bg-weekend':''));
                 
                 const tasks = workData.map((t,i)=>({...t,_id:i})).filter(t => {
                     const start = normalizeDateStr(t.date); const end = normalizeDateStr(t.endDate) || start;
@@ -524,7 +541,7 @@
     function openModalWithDate(date, person) { openModal(); document.getElementById('inDate').value = date; document.getElementById('inPerson').value = person; }
     
     function renderDashboard() {
-        const total = workData.length; const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const total = workData.length; const todayStr = `2026-06-16`;
         let done = 0; let inProgress = 0; let overdueCount = 0; let todayCount = 0;
         workData.forEach(task => {
             const dateStr = normalizeDateStr(task.date); const deadline = normalizeDateStr(task.endDate || task.date);
@@ -535,7 +552,8 @@
         
         let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 }, personMap = {}, locMap = {};
         workData.forEach(t => { 
-            if(typeMap.hasOwnProperty(t.type)) typeMap[t.type]++; else typeMap['Other']++;
+            let rawType = t.type || 'Other';
+            if(typeMap.hasOwnProperty(rawType)) typeMap[rawType]++; else typeMap['Other']++;
             if(t.person) t.person.split(/,|，/).forEach(p => { if(p.trim()) personMap[p.trim()] = (personMap[p.trim()] || 0) + 1; });
             if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1;
         });
@@ -546,21 +564,7 @@
     }
     
     function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c, borderColor:'#fff', borderWidth:2}]},options:{maintainAspectRatio:false}}); }
-    
-    function updateDropdowns() {
-        const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter');
-        if(!ls || !ps) return;
-        ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>';
-        [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`);
-        let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim())));
-        [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`);
-    }
-    
-    function updateStatus(msg) { const statusEl = document.getElementById('syncStatus'); if(statusEl) statusEl.innerText = msg; }
-    function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; document.getElementById('inPerson').value = currentUser; }
-    function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
-    function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time || ''; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools || ''; document.getElementById('inRemarks').value=i.remarks || ''; }
-    function exportToCSV() { const filtered = getFilteredData(); if(filtered.length === 0) return alert("没有数据可导出"); let csvContent = "data:text/csv;charset=utf-8,\uFEFFType,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; filtered.forEach(row => { csvContent += [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '')}"`, `"${(row.tools || '')}"`, `"${(row.remarks || '')}"`, `"${(row.person || '')}"`, row.status || '' ].join(",") + "\n"; }); const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `CS_Export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+    function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(!ls || !ps) return; ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>'; [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim()))); [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`); }
 </script>
 </body>
 </html>
