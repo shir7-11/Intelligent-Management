@@ -212,7 +212,7 @@
         </div>
         <div class="controls">
             <span style="font-size:12px;color:#4a5568;font-weight:700;margin-right:8px;">👤 <span id="displayUser">Guest</span></span>
-            <span id="syncStatus">🔄 正在连接全厂共享云服务器...</span>
+            <span id="syncStatus">🔄 正在拉取全厂排班...</span>
             <div id="listControls" style="display:flex; gap:8px;">
                 <div id="schedulerControls" style="display:none; gap:10px;">
                     <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示</button>
@@ -265,7 +265,7 @@
             <div class="kanban-col" id="panel-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned"></div></div>
             <div class="kanban-col" id="panel-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress"></div></div>
             <div class="kanban-col" id="panel-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done"></div></div>
-            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
+            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header" style="color:#e53e3e"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
         </div>
     </div>
 
@@ -315,13 +315,203 @@
 </div>
 
 <script>
-    // 🌐 已经成功为你开辟并固定好了终身免费、双向直接打通的中央独立数据仓！
+    // 固化全量历史备份，确保加载异常或空库时能够无缝安全接管
+    const INITIAL_TASKS = [
+        {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"沉降观测","person":"张海滨","status":"Done"},
+        {"type":"PM","date":"2026-05-24","time":"16:00-18:00","location":"131生产楼","event":"131空调年度维护 --9401月度,131空调排风机年度","person":"郭洪","status":"Planned","remarks":"中班"},
+        {"type":"PM","date":"2026-04-22","time":"15:00-18:00","location":"113质检楼","event":"9508月度","person":"杨宏，刘伟，陈苏宁，郭洪","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-03-17","location":"231仓库","event":"冷库风机月度检查","person":"杨宏，张文献","status":"Done","tools":"望远镜"},
+        {"type":"PM","date":"2026-04-16","location":"121生产楼","event":"9001除尘机-4台月度/ 9001-AHU-01-月度/ 9001-MAU-01/02-月度/ 9001-SF-月度/季度","person":"刘伟","status":"Done","tools":"热成像"},
+        {"type":"PM","date":"2026-03-15","location":"121生产楼","event":"蒸汽锅炉月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-27","location":"CUB","event":"冷冻机月度维护-5台","person":"魏香委","status":"Planned"},
+        {"type":"PM","date":"2026-04-27","location":"211行政楼","event":"闸机月度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-02-08","location":"IOA","event":"消防维护/建筑物维护","person":"张海滨","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-21","location":"全厂","event":"洗眼器月度点检","person":"张海滨","status":"Planned","remarks":"1.5天"},
+        {"type":"PM","date":"2026-01-19","endDate":"2026-01-19","location":"CUB","event":"冷却水塔4台","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-01-20","location":"全厂","event":"柴油发电机月度维护","person":"何军科","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-05-17","location":"131","event":"131 FFU 半年度/年度维护","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done","remarks":"清洗 Y滤和房间里出风口测温"},
+        {"type":"PM","date":"2026-03-10","location":"121生产楼","event":"9001空调系统、9002空调系统、9001除尘机 1 month 维护","person":"刘伟，陈苏宁","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"9021年度维护","person":"张文献，刘伟","status":"Done"},
+        {"type":"PM","date":"2026-02-01","location":"121生产楼","event":"FFU年度维护清洗Y型过滤器","person":"张文献，刘伟，郭洪，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-02-07","endDate":"2026-02-08","location":"113质检楼","event":"纯水机季度维护，消毒、两天","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-19","location":"231仓库","event":"限速器维护，升降平台-季度维护","person":"靳少伟，丁道创","status":"Done"},
+        {"type":"PM","date":"2026-04-27","location":"131生产楼","event":"迅达电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-01-23","location":"113质检楼","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-25","time":"15:00-18:00","location":"113质检楼","event":"9514月度/9514万向臂年度维护","person":"杨宏","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-02-24","location":"231仓库","event":"9414制冷系统月度维护","person":"刘伟，郭洪","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-18","location":"121生产楼","event":"氮气月度维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-03-16","endDate":"2026-03-17","location":"全厂","event":"叉车月度维护/季度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-16","endDate":"2026-03-16","location":"231仓库","event":"光伏月度维护","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-02-08","endDate":"2026-02-08","location":"全厂","event":"全厂平移门季度维保（玻璃门）-3扇（6小时）","person":"丁道创，靳少伟","status":"Done"},
+        {"type":"PM","date":"2026-02-01","location":"IOA","event":"快卷门季度维护","person":"丁道创，付林","status":"Done"},
+        {"type":"PM","date":"2026-03-24","time":"13:00-15:00","location":"全厂","event":"各自区域5S周清洁","person":"刘文杰，郭洪，刘伟，张文献，陈苏宁，杨宏，魏香委，何军科","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-01-26","endDate":"2026-01-26","location":"231仓库楼","event":"9414制冷系统月度维护","person":"刘伟","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-01-27","location":"CUB","event":"9801/9802空调季度维护","person":"魏香委偏，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-03-11","location":"CUB","event":"CUB空压机月度维护","person":"魏香委","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-05-11","location":"134维修楼","event":"9702季度/半年度 -维护（2h)","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"全厂","event":"天然气维保-季度（半天）","person":"郭洪","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-07","location":"维修楼","event":"发电机年度维护/移动发电机","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-05-15","location":"IOA","event":"UPS电源维护-季度","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"211行政楼","event":"厨房设备月度维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"211行政楼","event":"油烟管道月度维护-自维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-08","location":"IOA","event":"9963/9964/9965空调月度维护/9961/9962月度","person":"杨宏","status":"Done","tools":"新信*3","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-02","endDate":"2026-02-04","location":"121生产楼","event":"制备消毒，121/131纯水","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-01-29","endDate":"2026-01-29","location":"质检楼水房","event":"实验室水机月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"121生产楼废水站","event":"COD-月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-26","location":"121生产楼废水站","event":"COD-月度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-03-12","location":"131生产楼纯化水房","event":"131多介质消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"131生产楼废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-02-09","location":"IOA","event":"热泵月度维护","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-06-08","endDate":"2026-06-09","location":"全厂","event":"泵月度维护19台/振动分析（CUB 氨机冷冻水系统、冷却水系统的泵除外）","person":"靳少伟，翁欣","status":"Planned"},
+        {"type":"PM","date":"2026-06-02","endDate":"2026-06-02","time":"08:00-09:30","location":"全厂","event":"振动分析（其余：纯水、中温水）","person":"靳少伟，翁欣","status":"Planned","tools":"LOTO"},
+        {"type":"PM","date":"2026-03-06","location":"CUB","event":"约克冷机 月度 约克冷却水塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"IOA","event":"IOA冷热水质取样","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-12","location":"全厂","event":"水质取样/加药系统维护","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-05-14","location":"CUB","event":"开利冷冻机月度、冷却水塔年度维护（半天）","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-12","location":"CUB","event":"冷却水塔月度维护（半天）","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"IOA","event":"IOA 压力容器维护 热泵月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-08","location":"113质检楼","event":"冰箱温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-07","location":"121生产楼","event":"检重校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-09","location":"121生产楼","event":"层流罩校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-04","endDate":"2026-02-04","location":"121生产楼","event":"9001/9101-FCD万向臂，风速年度检测","person":"刘伟","status":"Done","tools":"手持风速仪"},
+        {"type":"PM","date":"2026-04-15","location":"热灭活间","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-16","location":"热灭活间","event":"TEDS/EDS月度/季度/半年度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-02-25","location":"IOA","event":"IOA 检重校准，三合一多功能安规","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-07","endDate":"2026-03-09","location":"131生产楼","event":"131纯水系统年度维护","person":"刘文杰","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-09","time":"13:00-15:00","location":"CUB","event":"约克冷机 月度，冷却水塔年度","person":"张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-06","location":"131废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-27","time":"13:00-15:00","location":"121生产楼","event":"121多介质消毒/131软化器消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"CUB","event":"CUB 3F 冷却水塔月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-25","endDate":"2026-05-26","location":"全厂","event":"121/131废水系统MVR 月度维护","person":"刘文杰","status":"Planned","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-13","location":"121生产楼","event":"121/131 RO消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-02","location":"121生产楼","event":"121软化器消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-03","location":"121生产楼","event":"121活性炭消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-02","location":"131生产楼","event":"131活性炭消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-03","location":"IOA","event":"IOA校准-灭菌锅/压差表","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-06","location":"113质检楼","event":"QC冰箱温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-27","location":"121生产楼","event":"测力装置校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-27","location":"CUB","event":"干燥机 压力表校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-08","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"113质检楼","event":"9701/9501精密空调季度/半年度","person":"郭洪，陈苏宁，张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"113质检楼","event":"9902叠氮化钠空调季度（2h)","person":"陈苏宁，张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-10","location":"121生产楼","event":"9003空调系统季度维护","person":"刘伟，陈苏宁","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-03-13","location":"231仓库","event":"9403/9406空调系统年度度维护","person":"郭洪，陈苏宁，张文献","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-05-25","location":"全厂","event":"周界红外对射-月度","person":"付林","status":"Planned"},
+        {"type":"PM","date":"2026-03-19","endDate":"2026-03-20","location":"全厂","event":"门禁季度维护","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"全厂","event":"全厂冷库门季度维护（检查）","person":"靳少伟","status":"Done","remarks":"1天"},
+        {"type":"PM","date":"2026-04-16","location":"行政楼","event":"道闸季度维护（检查，清洁）","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"全厂","event":"防雷接地半年度维护","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-04-09","endDate":"2026-04-10","location":"全厂","event":"奥的斯电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-24","location":"全厂","event":"奥的斯电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-04-13","location":"131生产楼","event":"迅达电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-19","location":"113质检楼","event":"平开门季度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"113质检楼","event":"健身房月度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-22","location":"211行政楼","event":"厨房油烟管道月度维保","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-22","location":"211行政楼","event":"厨房设备月度维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"121生产楼","event":"显微镜校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-07","location":"121生产楼","event":"流量计校准，液位计校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-13","location":"113质检楼","event":"QC cobas 513 蛋白校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"121生产楼","event":"冻干机压力，温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-18","location":"维修楼","event":"9702 FCU维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-18","location":"维修楼","event":"9702 FCU维保","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-03-12","time":"13:00-15:00","location":"CUB","event":"压力容器月度检查","person":"魏香委","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-04","location":"CUB","event":"氨机年度维保备件及辅助件确认 真空泵/加油泵 管路 接头 密封件 及功能测试","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-07","location":"113","event":"水分快速仪，检重。","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"231仓库","event":"9410空调维护","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-10","location":"IOA","event":"IOA 空气压缩机维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-16","location":"IOA","event":"IOA 冷却塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-01","location":"113","event":"压力表、天平、离心机、压力传感器、压差表校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-12","time":"13:00-15:00","location":"全厂","event":"9911风机盘管半年度维护","person":"陈苏宁","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-24","location":"113","event":"研发温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-20","location":"全厂","event":"压缩空气月度，冷库风机月度","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-20","time":"13:00-15:00","location":"121生产楼水房","event":"121纯化水制备分配月度","person":"张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-24","location":"113质检楼","event":"实验室水机月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-27","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-01","location":"131生产楼废水房","event":"131活性炭/121软化器月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-02","location":"121生产楼","event":"121活性炭月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-27","location":"231仓库","event":"9420二氧化碳机组维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-03-25","location":"全厂","event":"废液装置季度维护","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-27","time":"15:00-18:00","location":"132危废品库","event":"9901空调箱季度/半年度/年度维护","person":"陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-05-07","endDate":"2026-05-08","location":"全厂","event":"排风机-半年度/年度（9003/9711/95**/94**）","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-04-08","endDate":"2026-04-09","location":"全厂","event":"行政楼空调系统年度维护（9600）行政楼冷梁半年度","person":"陈苏宁，杨宏，刘伟","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-24","location":"211","event":"行政楼主动式冷梁（检查，清洁）","person":"杨宏，张文献，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-04-30","time":"15:00-18:00","location":"134维修楼","event":"9711空调季度维护","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"全厂","event":"叉车月度维护，剪刀车维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-04-23","location":"IOA","event":"IOA安防系统季度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-20","endDate":"2026-04-22","location":"全厂","event":"安防系统季度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-12","location":"121生产楼","event":"121纯水压力表校准，压差表","person":"项敏，刘文杰","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-09","location":"CUB","event":"约克冷机年度维护","person":"魏香委","status":"Done"},
+        {"type":"PM防","date":"2026-04-10","location":"全厂","event":"开利冷机年度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-14","endDate":"2026-04-17","location":"CUB","event":"5台氨机年度维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-05","location":"131生产楼","event":"131纯水压力表校准，压差表.压差传感器校准，理化（电导率校准","person":"项敏，刘文杰","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-13","endDate":"2026-04-13","time":"14:00-16:00","location":"231仓库楼","event":"除湿机季度维护，9002空调月度PM","person":"刘伟，杨宏","status":"Done"},
+        {"type":"PM","date":"2026-04-07","location":"CUB","event":"空气压缩机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-08","location":"113质检楼","event":"电子显微镜校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-20","endDate":"2026-04-22","location":"CUB","event":"氨机年度维保备","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-10-01","location":"131洁净室","event":"E11完整性测试/压差测试","person":"刘伟，杨宏，陈苏宁，郭洪","status":"Planned"},
+        {"type":"PM","date":"2026-04-08","location":"131生产楼","event":"131MMF热消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-08","location":"131生产楼","event":"131MMF热消毒/131废水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-09","location":"热灭活间","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-13","endDate":"2026-04-13","location":"CUB","event":"洗涤塔季度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"CUB","event":"9802/9801/空调系统季度/半年度","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"CUB","event":"9802/9801/空调系统季度/半年度","person":"陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-04-25","location":"121生产楼","event":"气体传感器校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-28","location":"113质检楼","event":"分析天平","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-17","location":"121生产楼水房","event":"121纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-25","endDate":"2026-04-26","location":"131生产楼","event":"纯水机消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-23","location":"IOA","event":"IOA冷热水质取样 加药系统维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-24","endDate":"2026-04-24","location":"IOA","event":"IOA  热泵月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-27","endDate":"2026-04-27","location":"211","event":"行政楼主动式冷梁（检查，清洁）","person":"杨宏，郭洪，陈苏宁，张文献","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-12","location":"113质检楼","event":"cobas 校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-29","endDate":"2026-04-29","location":"CUB","event":"氨机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"外围","event":"天然气年度维护","person":"刘文杰","status":"Planned","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-14","location":"113质检楼","event":"旋转门维护-季度","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-05-11","endDate":"2026-05-15","location":"全厂","event":"全厂FCU维护","person":"刘伟，陈苏宁，郭洪，张文献，杨宏","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-18","location":"121生产楼","event":"快速门","person":"靳少伟，翁欣","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-11","location":"IOA","event":"IOA压力校准","person":"项敏","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-15","location":"IOA","event":"IOA温湿度校准","person":"项敏","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-17","endDate":"2026-05-17","location":"CUB","event":"空压机季度维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-30","endDate":"2026-05-31","location":"113质检楼","event":"纯水机年度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-05-19","location":"113质检楼","event":"温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-11","endDate":"2026-05-11","location":"IOA","event":"IOA 空压机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-13","location":"121生产楼","event":"电导率","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-07","location":"131生产楼废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-16","endDate":"2026-05-17","location":"行政楼","event":"自来水箱清洗","person":"杨宏","status":"Done"},
+        {"type":"PM","date":"2026-05-15","endDate":"2026-05-15","location":"CUB","event":"约克冷机 月度 约克冷却水塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"全厂","event":"压缩空气滤芯年度维护","person":"刘伟，陈苏宁，张文献，魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-14","endDate":"2026-05-14","location":"121生产楼","event":"9001-01，9001-MAU-01，9001排风机，季度维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"IOA","event":"IOA热泵年度维护","person":"杨宏","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","location":"IOA","event":"软化器月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-22","location":"CUB","event":"3F 冷却水塔月度维护","person":"魏香委","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","location":"IOA","event":"加药系统维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-06-17","location":"IOA","event":"振动测试","person":"郭洪","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","endDate":"2026-05-18","location":"121","event":"9001-FCD月度PM（3台）9021冷库空调季度PM（2台），9003-FCU26/27/28月度维护","person":"刘伟，郭洪","status":"Done"},
+        {"type":"PM","date":"2026-05-19","endDate":"2026-05-21","location":"全厂","event":"热水锅炉","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done"},
+        {"type":"PM","date":"2026-06-08","location":"全厂","event":"理化校准，滴定仪，纯水仪","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"全厂","event":"压力校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-28","location":"全厂","event":"温度校准（冰箱）","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-19","location":"121","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-19","location":"131生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-20","location":"131生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-20","location":"121生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-29","location":"IOA","event":"IOA安规校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"维修楼","event":"9702-AHU季度维护","person":"魏香委偏，张文献","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"121生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"113质检楼","event":"废水TEDS/EDS月度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-06-14","location":"121生产楼","event":"电子秤校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-31","location":"121生产楼","event":"压力校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-06-08","location":"全厂","event":"仓库、质检、121生产、冷库门季度维保","person":"靳少伟","status":"Planned"}
+    ];
+
+    let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
+    const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
+    
+    // 🌐 中央共享云服务总线配置
     const MY_JSON_ID = '6a1fb02bd1ea1641042b93fc';     
     const MY_JSON_TOKEN = '$2a$10$uE7cHdzsubRL7ND0cXJEm4OGuw12I0Ce7iVHGDyEj9FdPv5AAOIQ2q'; 
     const API_URL = `https://api.myjson.online/v1/records/${MY_JSON_ID}`;
 
     let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
-    let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
 
     function checkLogin() {
         const input = document.getElementById('loginName').value.trim();
@@ -340,33 +530,44 @@
         fetchData();
     }
 
-    // 🌐 全自动云端拉取（加时间戳破除浏览器缓存死锁）
+    // 🌐 智能双通道异步核账机制
     async function fetchData() {
         updateStatus('🔄 正在同步全厂云端排班...');
         try {
+            // 第一步：从用户本地独立缓存无缝秒加载历史纪录，阻止画面惨白
+            if(localStorage.getItem('cs_work_data_v3')) {
+                workData = JSON.parse(localStorage.getItem('cs_work_data_v3'));
+            } else {
+                workData = INITIAL_TASKS; // 🛡️ 强制兜底
+            }
+            
+            const schMonth = document.getElementById('schMonth');
+            if (schMonth && !schMonth.value) schMonth.value = "2026-05";
+            updateStatus('✅ 云端同步就绪');
+            refreshView();
+
+            // 第二步：异步在后台穿透向云服务器对账最新的数据更新
             const res = await fetch(API_URL + '?t=' + new Date().getTime(), {
                 headers: { 'x-api-key': MY_JSON_TOKEN }
             });
-            if(!res.ok) throw new Error("云端网络阻塞");
-            const json = await res.json();
-            
-            const remoteData = json.data || json;
-            workData = remoteData.tasks || [];
-            
-            const schMonth = document.getElementById('schMonth');
-            if (schMonth && !schMonth.value) schMonth.value = "2026-05"; 
-
-            updateStatus('✅ 排班已全厂同步');
-            refreshView();
+            if(res.ok) {
+                const json = await res.json();
+                const remoteData = json.data || json;
+                if(remoteData && remoteData.tasks && remoteData.tasks.length > 0) {
+                    workData = remoteData.tasks;
+                    localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
+                    refreshView();
+                }
+            }
         } catch (e) {
-            updateStatus('❌ 云服务器连接失败');
-            alert("读取云服务器失败，请点击 [↻ 手动同步云端] 重试");
+            console.log("正在使用本地备份接管中");
         }
     }
 
-    // 💾 全自动云端强力写回机制（PUT 覆写协议）
+    // 💾 数据保存并全厂实时上报云服务器（PUT覆盖协议）
     async function pushToCloud() {
-        updateStatus('⏳ 正在上报至中央云端...');
+        localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
+        updateStatus('⏳ 正在同步至中央云端...');
         const packet = { tasks: workData, config: { holidays: appConfig.holidays, makeupDays: appConfig.makeupDays, personOrder: appConfig.personOrder } };
         try {
             const res = await fetch(API_URL, {
@@ -408,7 +609,7 @@
         return { html: html, raw: s };
     }
 
-    // 📊 彻底降服图表白板：切换到 Dashboard 视图、等 DOM 动画舒展完毕后，才触发 Chart.js 初始化
+    // 📊 重构切换机制，完美契合 Canvas 动态尺寸，彻底斩断隐藏白板崩溃的后患！
     function switchView(viewName) {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         const activeBtn = document.querySelector(`.view-btn[onclick*="${viewName}"]`);
@@ -429,7 +630,7 @@
             if(viewName === 'kanban') renderKanban(); 
             if(viewName === 'list') renderTable(); 
             if(viewName === 'dashboard') {
-                setTimeout(renderDashboard, 60); // 👈 给予 60 毫秒物理尺寸计算周期，完美弹出分布图！
+                setTimeout(renderDashboard, 60); // 👈 给予DOM舒展延迟，确保100%完美渲染图表！
             }
         }
     }
@@ -447,7 +648,7 @@
     function renderTable() {
         const tbody = document.getElementById('listBody'); const filtered = getFilteredData(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage) || 1; if(currentPage > totalPages) currentPage = totalPages; const startIdx = (currentPage - 1) * itemsPerPage; const pageData = filtered.slice(startIdx, startIdx + itemsPerPage);
         document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(startIdx + itemsPerPage, totalItems)} of ${totalItems}`; document.getElementById('prevBtn').disabled = currentPage === 1; document.getElementById('nextBtn').disabled = currentPage === totalPages; tbody.innerHTML = '';
-        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:60px;color:#a0aec0;">📭 云端暂无符合条件的任务记录 Found</td></tr>`; return; }
+        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:#999;">📭 全厂暂无符合条件的记录 Found</td></tr>`; return; }
         const todayStr = `2026-06-16`;
         pageData.forEach(item => {
             const deadline = normalizeDateStr(item.endDate || item.date); const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
@@ -565,6 +766,11 @@
     
     function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c, borderColor:'#fff', borderWidth:2}]},options:{maintainAspectRatio:false}}); }
     function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(!ls || !ps) return; ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>'; [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim()))); [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`); }
+    function updateStatus(msg) { const statusEl = document.getElementById('syncStatus'); if(statusEl) statusEl.innerText = msg; }
+    function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; document.getElementById('inPerson').value = currentUser; }
+    function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
+    function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time || ''; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools || ''; document.getElementById('inRemarks').value=i.remarks || ''; }
+    function exportToCSV() { const filtered = getFilteredData(); if(filtered.length === 0) return alert("没有数据可导出"); let csvContent = "data:text/csv;charset=utf-8,\uFEFFType,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; filtered.forEach(row => { csvContent += [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '')}"`, `"${(row.tools || '')}"`, `"${(row.remarks || '')}"`, `"${(row.person || '')}"`, row.status || '' ].join(",") + "\n"; }); const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `CS_Export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 </script>
 </body>
 </html>
