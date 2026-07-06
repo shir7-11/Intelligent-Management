@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Dept. Intelligent Work Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 🟢 全局基础与变量 */
+        :root { 
+            --primary: #2d3748;
+            --accent: #4299e1;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --bg: #f7fafc;
+            --white: #ffffff; 
+            --font-stack: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        body { 
+            font-family: var(--font-stack); 
+            background: var(--bg); 
+            color: #4a5568; 
+            margin: 0; 
+            padding: 20px; 
+            font-size: 13px; 
+            line-height: 1.6; 
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 98%; margin: 0 auto; display: none; }
+        
+        header { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow-md); 
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 24px; 
+            position: sticky; top: 10px; z-index: 100;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .brand h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+        
+        .view-switcher { display: flex; background: #edf2f7; padding: 4px; border-radius: 8px; }
+        .view-btn { 
+            padding: 6px 18px; border: none; background: transparent; cursor: pointer; font-size: 13px; border-radius: 6px; 
+            color: #718096; font-weight: 600; font-family: var(--font-stack); transition: all 0.2s ease; 
+        }
+        .view-btn.active { background: var(--white); color: var(--accent); box-shadow: var(--shadow-sm); transform: scale(1.02); }
+        .view-btn:hover:not(.active) { color: var(--primary); }
+        
+        .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        select, input.search, input[type="month"] { 
+            padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; 
+            font-family: var(--font-stack); background: white; transition: all 0.2s ease; box-shadow: var(--shadow-sm);
+        }
+        select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+        input.search { width: 180px; }
+        
+        .btn { 
+            padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px; 
+            font-family: var(--font-stack); box-shadow: 0 2px 4px rgba(0,0,0,0.08); 
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.12); opacity: 1; filter: brightness(1.05); }
+        .btn:active { transform: scale(0.96); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .btn-add { background: var(--accent); } 
+        .btn-export { background: var(--success); } 
+        
+        .action-group { display: flex; gap: 6px; justify-content: flex-end; }
+        .btn-edit { background: #ecc94b; color: #744210; padding: 4px 10px; font-size: 11px; border-radius: 6px; border:none; cursor:pointer; font-weight:600;}
+        .btn-del { background: #fed7d7; color: #c53030; padding: 4px 10px; font-size: 11px; border-radius: 6px; border:none; cursor:pointer; font-weight:600;}
+
+        #listView, #dashboardView, #kanbanView, #schedulerView { display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .show-view { display: block !important; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-box { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg); overflow-x: auto; border: 1px solid rgba(255,255,255,0.5); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
+        thead { background: #f8fafc; }
+        th { text-align: left; padding: 16px 20px; border-bottom: 2px solid var(--border-color); color: #718096; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        td { padding: 14px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; vertical-align: middle; color: #2d3748; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f7fafc; }
+        
+        .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-right: 6px; margin-bottom: 4px; font-weight: 600; border: 1px solid transparent;}
+        .tag-loc { background: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; font-weight: 500; }
+        .tag-person { background: #edf2f7; color: #4a5568; border-color: #e2e8f0; font-weight: 500; border-radius: 20px;}
+        .tag-weekend { background: #fffaf0; color: #dd6b20; border-color: #feebc8; }
+        .tag-holiday { background: #fff5f5; color: #c53030; border-color: #fed7d7; font-weight: 700; }
+        .tag-makeup { background: #f7fafc; color: #4a5568; border: 1px solid #cbd5e0; font-weight: 700; }
+        .tag-duration { background: #b794f4; color: white; border-radius: 20px; padding: 1px 8px; font-size: 10px; margin-left: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .tag-type { font-weight: 700; border-radius: 6px; padding: 3px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+        .tag-pm { background: #e6fffa; color: #285e61; border: 1px solid #b2f5ea; }
+        .tag-project { background: #faf5ff; color: #553c9a; border: 1px solid #e9d8fd; }
+        .tag-adhoc { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
+
+        .pagination { display: flex; justify-content: flex-end; align-items: center; padding: 15px 24px; gap: 10px; background: #fff; border-top: 1px solid var(--border-color); }
+        .page-btn { padding: 6px 14px; border: 1px solid #e2e8f0; background: white; cursor: pointer; border-radius: 6px; font-size: 13px; color: #4a5568; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background: #f7fafc; border-color: #cbd5e0; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: #718096; }
+        
+        .scheduler-container { padding: 24px; background: white; border-radius: 12px; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.5); }
+        .scheduler-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #edf2f7; }
+        .scheduler-title { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        
+        .scheduler-legend { display: flex; gap: 16px; font-size: 12px; color: #718096; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
+        
+        .scheduler-table th, .scheduler-table td { border: 1px solid #dcdcdc; text-align: center; padding: 4px; height: 50px; vertical-align: top; }
+        .scheduler-table th { 
+            background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; 
+            font-size: 12px; font-weight: 600; height: 48px; line-height: 1.3; vertical-align: middle; border-bottom: 2px solid #e2e8f0; 
+        }
+        .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #cbd5e0; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
+        .scheduler-table td { background-color: #edf2f7; }
+
+        .bg-weekend { background-color: #fcebd0 !important; color: #9c4221 !important; border-right: 1px solid #ed8936; } 
+        .bg-holiday { background-color: #fed7d7 !important; color: #742a2a !important; border-left: 1px solid #e53e3e !important; border-right: 1px solid #e53e3e !important; } 
+        .bg-makeup { background-color: #ffffff !important; position:relative; } 
+        .bg-makeup::after { content: '班'; position: absolute; top: 2px; right: 2px; font-size: 9px; color: #fff; background: #a0aec0; border-radius:3px; padding:0 3px; }
+        .bg-today { background-color: #bee3f8 !important; border-left: 2px solid #3182ce !important; border-right: 2px solid #3182ce !important; } 
+        .th-today { background-color: #3182ce !important; color: white !important; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3); border-radius: 4px 4px 0 0; } 
+
+        .scheduler-table td.cell-clickable { cursor: cell; transition: background 0.1s; }
+        .scheduler-table td.cell-clickable:hover { filter: brightness(0.95); position: relative; z-index: 2; }
+
+        .sch-task { 
+            background: #fff; border-left: 4px solid var(--accent); margin: 3px 2px; padding: 4px 6px; font-size: 11px; text-align: left; border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: all 0.2s ease;
+        }
+        .sch-task:hover { transform: translateY(-2px) scale(1.02); z-index: 100; position: relative; width: auto; min-width: 100%; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+        .sch-task-pm { border-left-color: #38b2ac; background: #e6fffa; color: #234e52; }
+        .sch-task-adhoc { border-left-color: #ed8936; background: #fffaf0; color: #7b341e; }
+        .sch-task-done { border-left-color: #48bb78 !important; background: #f0fff4 !important; color: #22543d !important; font-weight: 600; opacity: 0.8; text-decoration: line-through; }
+
+        .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; height: calc(100vh - 160px); overflow-x: auto; padding-bottom: 20px; } 
+        .kanban-col { background: #edf2f7; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; min-width: 280px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); }
+        .kanban-col.drag-over { background: #cbd5e0; border: 2px dashed #4299e1; }
+        .kanban-header { font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #cbd5e0; display: flex; justify-content: space-between; align-items: center; color: #4a5568; font-size: 14px; letter-spacing: 0.5px; }
+        .kanban-count { background: white; border-radius: 20px; padding: 2px 10px; font-size: 11px; color: #718096; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: 700;}
+        .kanban-list { flex: 1; overflow-y: auto; padding-right: 4px; min-height: 100px; }
+        .kanban-card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); cursor: grab; border-left: 4px solid #ccc; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .kanban-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .k-title { font-weight: 600; color: #2d3748; margin-bottom: 8px; line-height: 1.4; }
+        .k-meta { display: flex; justify-content: space-between; font-size: 11px; color: #a0aec0; margin-bottom: 8px; }
+        .card-Planned { border-left-color: var(--accent); }
+        .card-InProgress { border-left-color: var(--warning); }
+        .card-Done { border-left-color: var(--success); opacity: 0.7; }
+        .card-Overdue { border-left-color: var(--danger); background: #fff5f5; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
+        .kpi-card { background: white; padding: 24px 30px; border-radius: 16px; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.6); transition: transform 0.2s; position:relative; overflow:hidden;}
+        .kpi-card::before { content:''; position:absolute; top:0; left:0; width:6px; height:100%; background:currentColor; }
+        .kpi-card:hover { transform: translateY(-4px); }
+        .kpi-info p { margin: 0 0 8px 0; font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .kpi-info h3 { margin: 0; font-size: 32px; color: var(--primary); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+        .kpi-icon { font-size: 28px; opacity: 0.8; filter: grayscale(0.2); }
+        
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .chart-box { background: white; padding: 24px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.6); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+        .chart-header h4 { margin: 0; font-size: 16px; color: var(--primary); font-weight: 700; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(29, 39, 49, 0.6); z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-content { background: #fff; width: 500px; margin: 6% auto; padding: 32px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease; }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .form-row { display: flex; gap: 20px; } 
+        .form-group { margin-bottom: 18px; flex: 1; }
+        .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #4a5568; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: var(--font-stack); font-size: 14px; transition: all 0.2s; }
+        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+        .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: var(--font-stack); font-size: 12px; }
+        #syncStatus { font-size: 12px; color: #4299e1; margin-left: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a202c;z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;color:white;">
+    <h2 style="margin-bottom:8px; font-weight:800; font-size:32px;">👋 Welcome</h2>
+    <h3 style="margin:0 0 30px 0; font-size:16px; font-weight:400; opacity:0.7; letter-spacing:1px;">CS INTELLIGENT WORK MANAGEMENT</h3>
+    
+    <div style="background:rgba(255,255,255,0.1); padding:30px; border-radius:16px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1);">
+        <p style="margin-bottom:15px;opacity:0.9;font-size:14px;font-weight:600;">请输入您的姓名登记访问</p>
+        <div style="display:flex;gap:12px;">
+            <input type="text" id="loginName" placeholder="Name (e.g. Tom)" style="padding:12px 16px;border-radius:8px;border:none;width:200px;font-family:inherit;font-size:14px;background:white;color:#333;">
+            <button onclick="checkLogin()" style="padding:12px 24px;background:#4299e1;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.2s;">Enter</button>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <header>
+        <div class="brand">
+            <h1>CS Dept. Intelligent Work Management</h1>
+        </div>
+        <div class="view-switcher">
+            <button class="view-btn active" onclick="switchView('list')">📋 列表 List</button>
+            <button class="view-btn" onclick="switchView('scheduler')">📅 排程 Scheduler</button>
+            <button class="view-btn" onclick="switchView('kanban')">🏗️ 看板 Kanban</button>
+            <button class="view-btn" onclick="switchView('dashboard')">📊 报表 Dashboard</button>
+        </div>
+        <div class="controls">
+            <span style="font-size:12px;color:#4a5568;font-weight:700;margin-right:8px;">👤 <span id="displayUser">Guest</span></span>
+            <span id="syncStatus">🔄 正在连接全厂共享云服务器...</span>
+            <div id="listControls" style="display:flex; gap:8px;">
+                <div id="schedulerControls" style="display:none; gap:10px;">
+                    <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示</button>
+                    <input type="month" id="schMonth" onchange="renderScheduler()">
+                </div>
+                <div id="commonControls" style="display:flex; gap:8px;">
+                    <select id="typeFilter" onchange="refreshView()"><option value="">📂 All Types</option><option value="PM">🛠️ PM (预防)</option><option value="Project">🚧 Project (施工)</option><option value="Adhoc">⚡ Adhoc (抢修)</option></select>
+                    <select id="locFilter" onchange="refreshView()"><option value="">📍 Location</option></select>
+                    <select id="personFilter" onchange="refreshView()"><option value="">👤 Person</option></select>
+                    <input type="text" class="search" id="searchInput" placeholder="🔍 Search..." onkeyup="refreshView()">
+                </div>
+            </div>
+            <button class="btn btn-export" onclick="exportToCSV()">📥 CSV导出</button>
+            <button class="btn btn-add" onclick="openModal()">+ New Task</button>
+            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">↻ 手动同步云端</button>
+        </div>
+    </header>
+
+    <div id="listView" class="show-view">
+        <div class="table-box">
+            <table id="mainTable">
+                <thead>
+                    <tr><th width="18%">日期 Date</th><th width="8%">类型 Type</th><th width="10%">地点 Location</th><th width="20%">事件 Event</th><th width="10%">工具 Tools</th><th width="15%">备注 Remarks</th><th width="10%">人员 Person</th><th width="8%">状态 Status</th><th width="10%">操作 Action</th></tr>
+                </thead>
+                <tbody id="listBody"><tr><td colspan="9" style="text-align:center; padding:30px; color:#999;">Loading...</td></tr></tbody>
+            </table>
+            <div class="pagination"><span class="page-info" id="pageInfo">Showing 0-0 of 0</span><button class="page-btn" onclick="changePage(-1)" id="prevBtn">Previous</button><button class="page-btn" onclick="changePage(1)" id="nextBtn">Next</button></div>
+        </div>
+    </div>
+
+    <div id="schedulerView">
+        <div class="scheduler-container">
+            <div class="scheduler-header-bar">
+                <div class="scheduler-title" id="schedulerTitle">2026年 排程总览</div>
+                <div class="scheduler-legend">
+                    <div class="legend-item"><div class="legend-color" style="background:#bee3f8; border:2px solid #3182ce;"></div> 今天</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fed7d7; border:1px solid #e53e3e;"></div> 节假日</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#fcebd0; border:1px solid #ed8936;"></div> 周末</div>
+                    <div class="legend-item"><div class="legend-color" style="background:#edf2f7; border:1px solid #dcdcdc;"></div> 工作日</div>
+                </div>
+            </div>
+            <div id="schedulerTableWrapper" style="height:calc(100vh - 220px); overflow:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                <table class="scheduler-table" id="schedulerTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <div id="kanbanView">
+        <div class="kanban-board">
+            <div class="kanban-col" id="panel-Planned" ondrop="drop(event, 'Planned')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>📅 Planned</span><span class="kanban-count" id="count-Planned">0</span></div><div class="kanban-list" id="col-Planned"></div></div>
+            <div class="kanban-col" id="panel-InProgress" ondrop="drop(event, 'InProgress')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>⏳ In Progress</span><span class="kanban-count" id="count-InProgress">0</span></div><div class="kanban-list" id="col-InProgress"></div></div>
+            <div class="kanban-col" id="panel-Done" ondrop="drop(event, 'Done')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header"><span>✅ Done</span><span class="kanban-count" id="count-Done">0</span></div><div class="kanban-list" id="col-Done"></div></div>
+            <div class="kanban-col" id="panel-Overdue" ondrop="drop(event, 'Overdue')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"><div class="kanban-header" style="color:#e53e3e"><span>⚠️ Overdue</span><span class="kanban-count" id="count-Overdue">0</span></div><div class="kanban-list" id="col-Overdue"></div></div>
+        </div>
+    </div>
+
+    <div id="dashboardView">
+        <div class="dashboard-grid">
+            <div class="kpi-card" style="color: #4299e1;"><div class="kpi-info"><p>Today's Tasks</p><h3 id="kpi-today">0</h3></div><div class="kpi-icon">📅</div></div>
+            <div class="kpi-card" style="color: #e53e3e;"><div class="kpi-info"><p style="color:#e53e3e;">⚠️ Overdue</p><h3 id="kpi-overdue" style="color:#e53e3e">0</h3></div><div class="kpi-icon">🔥</div></div>
+            <div class="kpi-card" style="color: #ed8936;"><div class="kpi-info"><p>In Progress</p><h3 id="kpi-progress">0</h3></div><div class="kpi-icon">⏳</div></div>
+            <div class="kpi-card" style="color: #48bb78;"><div class="kpi-info"><p>Completed</p><h3 id="kpi-done">0</h3></div><div class="kpi-icon">✅</div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box"><div class="chart-header"><h4>🏭 工作类型分布 (Work Type)</h4></div><div style="height: 250px;"><canvas id="chartType"></canvas></div></div>
+            <div class="chart-box"><div class="chart-header"><h4>💿 任务状态概览 (Status)</h4></div><div style="height: 250px;"><canvas id="chartStatus"></canvas></div></div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box"><div class="chart-header"><h4>👥 人员负荷 (Top Workload)</h4></div><div style="height: 250px;"><canvas id="chartPerson"></canvas></div></div>
+            <div class="chart-box"><div class="chart-header"><h4>📍 地点热力 (Top Locations)</h4></div><div style="height: 250px;"><canvas id="chartLoc"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:var(--primary); font-weight:800; font-size:24px; margin-bottom:24px;">📝 任务详情 / Task</h3>
+        <input type="hidden" id="editIndex">
+        <div class="form-row">
+            <div class="form-group"><label>工作类型</label><select id="inType"><option value="PM">🛠️ PM (预防维护)</option><option value="Project">🚧 Project (施工改造)</option><option value="Adhoc">⚡ Adhoc (临时抢修)</option></select></div>
+            <div class="form-group"><label>时间 (HH:MM)</label><input type="text" id="inTime" placeholder="例如: 14:00"></div>
+        </div>
+        <div class="form-row" style="background:#f7fafc; padding:15px; border-radius:12px; border:1px solid #edf2f7; margin-bottom:15px;">
+            <div class="form-group" style="margin-bottom:0;"><label>开始日期 (Start Date)</label><input type="text" id="inDate" placeholder="YYYY-MM-DD"></div>
+            <div class="form-group" style="margin-bottom:0;"><label>结束日期 (End Date - Optional)</label><input type="text" id="inEndDate" placeholder="YYYY-MM-DD"></div>
+        </div>
+        <div class="form-group"><label>地点 Location</label><input type="text" id="inLoc"></div>
+        <div class="form-group"><label>事件内容 Event Content</label><input type="text" id="inEvent" placeholder="Describe the task..."></div>
+        <div class="form-row">
+            <div class="form-group"><label>所需工具 Tools</label><input type="text" id="inTools"></div>
+            <div class="form-group"><label>备注 Remarks</label><input type="text" id="inRemarks"></div>
+        </div>
+        <div class="form-group"><label>人员 Person (Comma separated)</label><input type="text" id="inPerson"></div>
+        <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned (Blue)</option><option value="InProgress">In Progress (Orange)</option><option value="Done">Done (Green)</option><option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (Force Flag)</option></select></div>
+        <div style="text-align:right; margin-top:30px;">
+            <button class="btn" style="background:#edf2f7; color:#4a5568" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">实时同步至云端</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 固化全量历史备份，确保空仓或初始化加载时能作为绝对安全的物理地基拉起
+    const INITIAL_TASKS = [
+        {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"沉降观测","person":"张海滨","status":"Done"},
+        {"type":"PM","date":"2026-05-24","time":"16:00-18:00","location":"131生产楼","event":"131空调年度维护 --9401月度,131空调排风机年度","person":"郭洪","status":"Planned","remarks":"中班"},
+        {"type":"PM","date":"2026-04-22","time":"15:00-18:00","location":"113质检楼","event":"9508月度","person":"杨宏，刘伟，陈苏宁，郭洪","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-03-17","location":"231仓库","event":"冷库风机月度检查","person":"杨宏，张文献","status":"Done","tools":"望远镜"},
+        {"type":"PM","date":"2026-04-16","location":"121生产楼","event":"9001除尘机-4台月度/ 9001-AHU-01-月度/ 9001-MAU-01/02-月度/ 9001-SF-月度/季度","person":"刘伟","status":"Done","tools":"热成像"},
+        {"type":"PM","date":"2026-03-15","location":"121生产楼","event":"蒸汽锅炉月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-27","location":"CUB","event":"冷冻机月度维护-5台","person":"魏香委","status":"Planned"},
+        {"type":"PM","date":"2026-04-27","location":"211行政楼","event":"闸机月度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-02-08","location":"IOA","event":"消防维护/建筑物维护","person":"张海滨","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-21","location":"全厂","event":"洗眼器月度点检","person":"张海滨","status":"Planned","remarks":"1.5天"},
+        {"type":"PM","date":"2026-01-19","endDate":"2026-01-19","location":"CUB","event":"冷却水塔4台","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-01-20","location":"全厂","event":"柴油发电机月度维护","person":"何军科","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-05-17","location":"131","event":"131 FFU 半年度/年度维护","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done","remarks":"清洗 Y滤和房间里出风口测温"},
+        {"type":"PM","date":"2026-03-10","location":"121生产楼","event":"9001空调系统、9002空调系统、9001除尘机 1 month 维护","person":"刘伟，陈苏宁","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"9021年度维护","person":"张文献，刘伟","status":"Done"},
+        {"type":"PM","date":"2026-02-01","location":"121生产楼","event":"FFU年度维护清洗Y型过滤器","person":"张文献，刘伟，郭洪，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-02-07","endDate":"2026-02-08","location":"113质检楼","event":"纯水机季度维护，消毒、两天","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-19","location":"231仓库","event":"限速器维护，升降平台-季度维护","person":"靳少伟，丁道创","status":"Done"},
+        {"type":"PM","date":"2026-04-27","location":"131生产楼","event":"迅达电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-01-23","location":"113质检楼","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-25","time":"15:00-18:00","location":"113质检楼","event":"9514月度/9514万向臂年度维护","person":"杨宏","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-02-24","location":"231仓库","event":"9414制冷系统月度维护","person":"刘伟，郭洪","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-18","location":"121生产楼","event":"氮气月度维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-03-16","endDate":"2026-03-17","location":"全厂","event":"叉车月度维护/季度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-16","endDate":"2026-03-16","location":"231仓库","event":"光伏月度维护","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-02-08","endDate":"2026-02-08","location":"全厂","event":"全厂平移门季度维保（玻璃门）-3扇（6小时）","person":"丁道创，靳少伟","status":"Done"},
+        {"type":"PM","date":"2026-02-01","location":"IOA","event":"快卷门季度维护","person":"丁道创，付林","status":"Done"},
+        {"type":"PM","date":"2026-03-24","time":"13:00-15:00","location":"全厂","event":"各自区域5S周清洁","person":"刘文杰，郭洪，刘伟，张文献，陈苏宁，杨宏，魏香委，何军科","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-01-26","endDate":"2026-01-26","location":"231仓库楼","event":"9414制冷系统月度维护","person":"刘伟","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-01-27","location":"CUB","event":"9801/9802空调季度维护","person":"魏香委偏，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-03-11","location":"CUB","event":"CUB空压机月度维护","person":"魏香委","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-05-11","location":"134维修楼","event":"9702季度/半年度 -维护（2h)","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"全厂","event":"天然气维保-季度（半天）","person":"郭洪","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-07","location":"维修楼","event":"发电机年度维护/移动发电机","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-05-15","location":"IOA","event":"UPS電源维护-季度","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"211行政楼","event":"厨房设备月度维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-02-08","location":"211行政楼","event":"油烟管道月度维护-自维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-08","location":"IOA","event":"9963/9964/9965空调月度维护/9961/9962月度","person":"杨宏","status":"Done","tools":"新信*3","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-02","endDate":"2026-02-04","location":"121生产楼","event":"制备消毒，121/131纯水","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-01-29","endDate":"2026-01-29","location":"质检楼水房","event":"实验室水机月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"121生产楼废水站","event":"COD-月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-26","location":"121生产楼废水站","event":"COD-月度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-03-12","location":"131生产楼纯化水房","event":"131多介质消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"131生产楼废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-02-09","location":"IOA","event":"热泵月度维护","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-06-08","endDate":"2026-06-09","location":"全厂","event":"泵月度维护19台/振动分析（CUB 氨机冷冻水系统、冷却水系统的泵除外）","person":"靳少伟，翁欣","status":"Planned"},
+        {"type":"PM","date":"2026-06-02","endDate":"2026-06-02","time":"08:00-09:30","location":"全厂","event":"振动分析（其余：纯水、中温水）","person":"靳少伟，翁欣","status":"Planned","tools":"LOTO"},
+        {"type":"PM","date":"2026-03-06","location":"CUB","event":"约克冷机 月度 约克冷却水塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"IOA","event":"IOA冷热水质取样","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-12","location":"全厂","event":"水质取样/加药系统维护","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-05-14","location":"CUB","event":"开利冷冻机月度、冷却水塔年度维护（半天）","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-02-12","location":"CUB","event":"冷却水塔月度维护（半天）","person":"魏香委","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"IOA","event":"IOA 压力容器维护 热泵月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-08","location":"113质检楼","event":"冰箱温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-07","location":"121生产楼","event":"检重校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-09","location":"121生产楼","event":"层流罩校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-04","endDate":"2026-02-04","location":"121生产楼","event":"9001/9101-FCD万向臂，风速年度检测","person":"刘伟","status":"Done","tools":"手持风速仪"},
+        {"type":"PM","date":"2026-04-15","location":"热灭活间","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-16","location":"热灭活间","event":"TEDS/EDS月度/季度/半年度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-02-25","location":"IOA","event":"IOA 检重校准，三合一多功能安规","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-07","endDate":"2026-03-09","location":"131生产楼","event":"131纯水系统年度维护","person":"刘文杰","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-09","time":"13:00-15:00","location":"CUB","event":"约克冷机 月度，冷却水塔年度","person":"张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-06","location":"131废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-27","time":"13:00-15:00","location":"121生产楼","event":"121多介质消毒/131软化器消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"CUB","event":"CUB 3F 冷却水塔月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-25","endDate":"2026-05-26","location":"全厂","event":"121/131废水系统MVR 月度维护","person":"刘文杰","status":"Planned","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-13","location":"121生产楼","event":"121/131 RO消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-02","location":"121生产楼","event":"121软化器消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-03","location":"121生产楼","event":"121活性炭消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-02","location":"131生产楼","event":"131活性炭消毒-月度","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-03","location":"IOA","event":"IOA校准-灭菌锅/压差表","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-06","location":"113质检楼","event":"QC冰箱温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-27","location":"121生产楼","event":"测力装置校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-02-27","location":"CUB","event":"干燥机 压力表校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-08","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"113质检楼","event":"9701/9501精密空调季度/半年度","person":"郭洪，陈苏宁，张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-17","time":"13:00-15:00","location":"113质检楼","event":"9902叠氮化钠空调季度（2h)","person":"陈苏宁，张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-10","location":"121生产楼","event":"9003空调系统季度维护","person":"刘伟，陈苏宁","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-03-13","location":"231仓库","event":"9403/9406空调系统年度度维护","person":"郭洪，陈苏宁，张文献","status":"Done","tools":"LOTO"},
+        {"type":"PM","date":"2026-05-25","location":"全厂","event":"周界红外对射-月度","person":"付林","status":"Planned"},
+        {"type":"PM","date":"2026-03-19","endDate":"2026-03-20","location":"全厂","event":"门禁季度维护","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"全厂","event":"全厂冷库门季度维护（检查）","person":"靳少伟","status":"Done","remarks":"1天"},
+        {"type":"PM","date":"2026-04-16","location":"行政楼","event":"道闸季度维护（检查，清洁）","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-03-26","location":"全厂","event":"防雷接地半年度维护","person":"何军科","status":"Done"},
+        {"type":"PM","date":"2026-04-09","endDate":"2026-04-10","location":"全厂","event":"奥的斯电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-24","location":"全厂","event":"奥的斯电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-04-13","location":"131生产楼","event":"迅达电梯维保","person":"丁道创","status":"Done","remarks":"施工单"},
+        {"type":"PM","date":"2026-03-19","location":"113质检楼","event":"平开门季度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-19","location":"113质检楼","event":"健身房月度维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-03-22","location":"211行政楼","event":"厨房油烟管道月度维保","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-22","location":"211行政楼","event":"厨房设备月度维护","person":"何垣莹","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"121生产楼","event":"显微镜校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-07","location":"121生产楼","event":"流量计校准，液位计校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-13","location":"113质检楼","event":"QC cobas 513 蛋白校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"121生产楼","event":"冻干机压力，温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-18","location":"维修楼","event":"9702 FCU维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-18","location":"维修楼","event":"9702 FCU维保","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-03-12","time":"13:00-15:00","location":"CUB","event":"压力容器月度检查","person":"魏香委","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-04","location":"CUB","event":"氨机年度维保备件及辅助件确认 真空泵/加油泵 管路 接头 密封件 及功能测试","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-07","location":"113","event":"水分快速仪，检重。","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-09","location":"231仓库","event":"9410空调维护","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-10","location":"IOA","event":"IOA 空气压缩机维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-03-16","location":"IOA","event":"IOA 冷却塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-01","location":"113","event":"压力表、天平、离心机、压力传感器、压差表校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-12","time":"13:00-15:00","location":"全厂","event":"9911风机盘管半年度维护","person":"陈苏宁","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-24","location":"113","event":"研发温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-03-20","location":"全厂","event":"压缩空气月度，冷库风机月度","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-20","time":"13:00-15:00","location":"121生产楼水房","event":"121纯化水制备分配月度","person":"张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-24","location":"113质检楼","event":"实验室水机月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-03-27","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-01","location":"131生产楼废水房","event":"131活性炭/121软化器月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-02","location":"121生产楼","event":"121活性炭月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-27","location":"231仓库","event":"9420二氧化碳机组维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-03-25","location":"全厂","event":"废液装置季度维护","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-03-27","time":"15:00-18:00","location":"132危废品库","event":"9901空调箱季度/半年度/年度维护","person":"陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-05-07","endDate":"2026-05-08","location":"全厂","event":"排风机-半年度/年度（9003/9711/95**/94**）","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-04-08","endDate":"2026-04-09","location":"全厂","event":"行政楼空调系统年度维护（9600）行政楼冷梁半年度","person":"陈苏宁，杨宏，刘伟","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-24","location":"211","event":"行政楼主动式冷梁（检查，清洁）","person":"杨宏，张文献，陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-04-30","time":"15:00-18:00","location":"134维修楼","event":"9711空调季度维护","person":"张文献","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"全厂","event":"叉车月度维护，剪刀车维护","person":"丁道创","status":"Done"},
+        {"type":"PM","date":"2026-04-23","location":"IOA","event":"IOA安防系统季度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-20","endDate":"2026-04-22","location":"全厂","event":"安防系统季度维护","person":"付林","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-12","location":"121生产楼","event":"121纯水压力表校准，压差表","person":"项敏，刘文杰","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-09","location":"CUB","event":"约克冷机年度维护","person":"魏香委","status":"Done"},
+        {"type":"PM防","date":"2026-04-10","location":"全厂","event":"开利冷机年度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-14","endDate":"2026-04-17","location":"CUB","event":"5台氨机年度维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-05","location":"131生产楼","event":"131纯水压力表校准，压差表.压差传感器校准，理化（电导率校准","person":"项敏，刘文杰","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-04-13","endDate":"2026-04-13","time":"14:00-16:00","location":"231仓库楼","event":"除湿机季度维护，9002空调月度PM","person":"刘伟，杨宏","status":"Done"},
+        {"type":"PM","date":"2026-04-07","location":"CUB","event":"空气压缩机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-08","location":"113质检楼","event":"电子显微镜校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-20","endDate":"2026-04-22","location":"CUB","event":"氨机年度维保备","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-10-01","location":"131洁净室","event":"E11完整性测试/压差测试","person":"刘伟，杨宏，陈苏宁，郭洪","status":"Planned"},
+        {"type":"PM","date":"2026-04-08","location":"131生产楼","event":"131MMF热消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-08","location":"131生产楼","event":"131MMF热消毒/131废水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-09","location":"热灭活间","event":"TEDS/EDS月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-13","endDate":"2026-04-13","location":"CUB","event":"洗涤塔季度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"CUB","event":"9802/9801/空调系统季度/半年度","person":"郭洪","status":"Done"},
+        {"type":"PM","date":"2026-04-14","location":"CUB","event":"9802/9801/空调系统季度/半年度","person":"陈苏宁","status":"Done"},
+        {"type":"PM","date":"2026-04-25","location":"121生产楼","event":"气体传感器校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-28","location":"113质检楼","event":"分析天平","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-17","location":"121生产楼水房","event":"121纯化水月度维护","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-25","endDate":"2026-04-26","location":"131生产楼","event":"纯水机消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-23","endDate":"2026-04-23","location":"IOA","event":"IOA冷热水质取样 加药系统维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-24","endDate":"2026-04-24","location":"IOA","event":"IOA  热泵月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-04-27","endDate":"2026-04-27","location":"211","event":"行政楼主动式冷梁（检查，清洁）","person":"杨宏，郭洪，陈苏宁，张文献","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-12","location":"113质检楼","event":"cobas 校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-04-29","endDate":"2026-04-29","location":"CUB","event":"氨机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"外围","event":"天然气年度维护","person":"刘文杰","status":"Planned","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-14","location":"113质检楼","event":"旋转门维护-季度","person":"付林","status":"Done"},
+        {"type":"PM","date":"2026-05-11","endDate":"2026-05-15","location":"全厂","event":"全厂FCU维护","person":"刘伟，陈苏宁，郭洪，张文献，杨宏","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-18","location":"121生产楼","event":"快速门","person":"靳少伟，翁欣","status":"Done","remarks":"中班"},
+        {"type":"PM","date":"2026-05-11","location":"IOA","event":"IOA压力校准","person":"项敏","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-15","location":"IOA","event":"IOA温湿度校准","person":"项敏","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-05-17","endDate":"2026-05-17","location":"CUB","event":"空压机季度维保","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-30","endDate":"2026-05-31","location":"113质检楼","event":"纯水机年度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-05-19","location":"113质检楼","event":"温度校准","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-11","endDate":"2026-05-11","location":"IOA","event":"IOA 空压机月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-13","location":"121生产楼","event":"电导率","person":"项敏","status":"Done"},
+        {"type":"PM","date":"2026-05-07","location":"131生产楼废水房","event":"131废水月度PM","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-16","endDate":"2026-05-17","location":"行政楼","event":"自来水箱清洗","person":"杨宏","status":"Done"},
+        {"type":"PM","date":"2026-05-15","endDate":"2026-05-15","location":"CUB","event":"约克冷机 月度 约克冷却水塔维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"全厂","event":"压缩空气滤芯年度维护","person":"刘伟，陈苏宁，张文献，魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-14","endDate":"2026-05-14","location":"121生产楼","event":"9001-01，9001-MAU-01，9001排风机，季度维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-05-24","location":"IOA","event":"IOA热泵年度维护","person":"杨宏","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","location":"IOA","event":"软化器月度维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-05-22","location":"CUB","event":"3F 冷却水塔月度维护","person":"魏香委","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","location":"IOA","event":"加药系统维护","person":"魏香委","status":"Done"},
+        {"type":"PM","date":"2026-06-17","location":"IOA","event":"振动测试","person":"郭洪","status":"Planned"},
+        {"type":"PM","date":"2026-05-18","endDate":"2026-05-18","location":"121","event":"9001-FCD月度PM（3台）9021冷库空调季度PM（2台），9003-FCU26/27/28月度维护","person":"刘伟，郭洪","status":"Done"},
+        {"type":"PM","date":"2026-05-19","endDate":"2026-05-21","location":"全厂","event":"热水锅炉","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done"},
+        {"type":"PM","date":"2026-06-08","location":"全厂","event":"理化校准，滴定仪，纯水仪","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"全厂","event":"压力校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-28","location":"全厂","event":"温度校准（冰箱）","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-19","location":"121","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-19","location":"131生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-20","location":"131生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-20","location":"121生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-05-29","location":"IOA","event":"IOA安规校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"维修楼","event":"9702-AHU季度维护","person":"魏香委，张文献","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"121生产楼纯化水房","event":"纯化水月度消毒","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-05-21","location":"113质检楼","event":"废水TEDS/EDS月度维护","person":"刘文杰","status":"Planned"},
+        {"type":"PM","date":"2026-06-14","location":"121生产楼","event":"电子秤校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-05-31","location":"121生产楼","event":"压力校准","person":"项敏","status":"Planned"},
+        {"type":"PM","date":"2026-06-08","location":"全厂","event":"仓库、质检、121生产、冷库门季度维保","person":"靳少伟","status":"Planned"}
+    ];
+
+    let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
+    const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
+    
+    // 🌐 中央共享云服务总线配置
+    const MY_JSON_ID = '6a1fb02bd1ea1641042b93fc';     
+    const MY_JSON_TOKEN = '$2a$10$uE7cHdzsubRL7ND0cXJEm4OGuw12I0Ce7iVHGDyEj9FdPv5AAOIQ2q'; 
+    const API_URL = `https://api.myjson.online/v1/records/${MY_JSON_ID}`;
+
+    let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
+
+    function checkLogin() {
+        const input = document.getElementById('loginName').value.trim();
+        if(input.length > 0) {
+            currentUser = input; sessionStorage.setItem('current_user', currentUser); 
+            document.getElementById('displayUser').innerText = currentUser;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            fetchData();
+        } else { alert("请填写您的姓名"); }
+    }
+    
+    if(sessionStorage.getItem('current_user')) {
+        currentUser = sessionStorage.getItem('current_user'); document.getElementById('displayUser').innerText = currentUser;
+        document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
+        fetchData();
+    }
+
+    // 🌐 智能核账网道：修复其他用户登录看不到更新的问题
+    async function fetchData() {
+        updateStatus('🔄 正在同步全厂云端排班...');
+        const now = new Date();
+        
+        // 自动跟随当前月份配置
+        const schMonth = document.getElementById('schMonth');
+        if (schMonth && !schMonth.value) {
+            schMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        try {
+            // 修正拦截：优先穿透向云端请求最新的真实同步数据
+            const res = await fetch(API_URL + '?t=' + now.getTime(), {
+                headers: { 'x-api-key': MY_JSON_TOKEN }
+            });
+            if(res.ok) {
+                const json = await res.json();
+                const remoteData = json.data || json;
+                if(remoteData && remoteData.tasks && remoteData.tasks.length > 0) {
+                    workData = remoteData.tasks;
+                    localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
+                    updateStatus('✅ 云端同步就绪');
+                    refreshView();
+                    return;
+                }
+            }
+            throw new Error("云端无响应");
+        } catch (e) {
+            // 云端请求失败时，才降级使用本地存储，防止空白
+            if(localStorage.getItem('cs_work_data_v3') && JSON.parse(localStorage.getItem('cs_work_data_v3')).length > 0) {
+                workData = JSON.parse(localStorage.getItem('cs_work_data_v3'));
+            } else {
+                workData = INITIAL_TASKS; 
+            }
+            console.log("本地备份已成功接管全厂排班");
+            updateStatus('⚠️ 已加载本地缓存');
+            refreshView();
+        }
+    }
+
+    // 💾 变更发生时本地固化并一键强力推上中央服务器
+    async function pushToCloud() {
+        localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
+        updateStatus('⏳ 正在同步至中央云端...');
+        const packet = { tasks: workData, config: { holidays: appConfig.holidays, makeupDays: appConfig.makeupDays, personOrder: appConfig.personOrder } };
+        try {
+            const res = await fetch(API_URL, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-api-key': MY_JSON_TOKEN
+                },
+                body: JSON.stringify(packet)
+            });
+            if(!res.ok) throw new Error("存储拒绝");
+            updateStatus('✅ 排班已全厂同步');
+        } catch (e) {
+            updateStatus('❌ 实时云同步失败');
+        }
+    }
+
+    // 获取当前实际电脑时间字符串 (格式: YYYY-MM-DD)
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function normalizeDateStr(dateStr) {
+        if (!dateStr) return '';
+        let s = dateStr.trim(); const currentYear = new Date().getFullYear();
+        if (s.includes('月')) { s = s.replace(/日/g, '').replace(/月/g, '/'); if (!s.includes('年')) s = currentYear + '/' + s; else s = s.replace(/年/g, '/'); } else { s = s.replace(/-/g, '/'); }
+        const parts = s.split('/'); if(parts.length === 2) s = currentYear + '/' + s;
+        const d = new Date(s); if(isNaN(d.getTime())) return '';
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getDateDisplay(start, end) {
+        const s = normalizeDateStr(start); const e = normalizeDateStr(end); if (!s) return { html: '', raw: '' };
+        const dateObj = new Date(s.replace(/-/g, '/')); const day = dateObj.getDay(); 
+        let badge = '';
+        if (appConfig.holidays && appConfig.holidays.includes(s)) badge = `<span class="tag tag-holiday">🧧 节假日</span>`;
+        else if (appConfig.makeupDays && appConfig.makeupDays.includes(s)) badge = `<span class="tag tag-makeup">💼 班 (调休)</span>`;
+        else if (day === 0 || day === 6) badge = `<span class="tag tag-weekend">🏖️ 周末</span>`;
+        let html = `<div>${badge} <b style="font-size:14px;color:#2d3748;">${s}</b></div>`;
+        if (e && e !== s) {
+            const d1 = new Date(s); const d2 = new Date(e); const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)) + 1; 
+            html += `<div style="margin-top:4px; font-size:12px; color:#718096;"><span>⬇️ 至 ${e}</span><span class="tag tag-duration">🕒 ${diffDays}天</span></div>`;
+        }
+        return { html: html, raw: s };
+    }
+
+    function switchView(viewName) {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.view-btn[onclick*="${viewName}"]`);
+        if(activeBtn) activeBtn.classList.add('active');
+        
+        ['listView', 'dashboardView', 'kanbanView', 'schedulerView'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('show-view'); });
+        const targetView = document.getElementById(viewName + 'View'); if(targetView) targetView.classList.add('show-view');
+        
+        const schCtrl = document.getElementById('schedulerControls'); const comCtrl = document.getElementById('commonControls');
+        
+        if(viewName === 'scheduler') { 
+            if(schCtrl) schCtrl.style.display = 'flex'; 
+            if(comCtrl) comCtrl.style.display = 'none'; 
+            renderScheduler(); 
+        } else { 
+            if(schCtrl) schCtrl.style.display = 'none'; 
+            if(comCtrl) comCtrl.style.display = 'flex'; 
+            if(viewName === 'kanban') renderKanban(); 
+            if(viewName === 'list') renderTable(); 
+            if(viewName === 'dashboard') {
+                setTimeout(renderDashboard, 60); 
+            }
+        }
+    }
+    
+    function enterPresentationMode() { switchView('scheduler'); const elem = document.documentElement; if (elem.requestFullscreen) elem.requestFullscreen(); }
+    function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); }
+
+    function getFilteredData() {
+        const search = document.getElementById('searchInput').value.toUpperCase(); const locFilter = document.getElementById('locFilter').value; const personFilter = document.getElementById('personFilter').value; const typeFilter = document.getElementById('typeFilter').value;
+        let mapped = workData.map((item, idx) => ({ ...item, _id: idx }));
+        let filtered = mapped.filter(item => { const str = ((item.event||"")+(item.location||"")+(item.person||"")+(item.date||"")+(item.tools||"")+(item.remarks||"")).toUpperCase(); return str.includes(search) && (locFilter === "" || item.location === locFilter) && (personFilter === "" || (item.person && item.person.includes(personFilter))) && (typeFilter === "" || item.type === typeFilter); });
+        filtered.sort((a, b) => { const d1Str = normalizeDateStr(a.date) || '2099-12-31'; const d2Str = normalizeDateStr(b.date) || '2099-12-31'; if (d1Str !== d2Str) return d1Str.localeCompare(d2Str); const t1 = (a.time || '00:00').split('-')[0].trim(); const t2 = (b.time || '00:00').split('-')[0].trim(); return t1.localeCompare(t2); }); return filtered;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('listBody'); const filtered = getFilteredData(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage) || 1; if(currentPage > totalPages) currentPage = totalPages; const startIdx = (currentPage - 1) * itemsPerPage; const pageData = filtered.slice(startIdx, startIdx + itemsPerPage);
+        document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(startIdx + itemsPerPage, totalItems)} of ${totalItems}`; document.getElementById('prevBtn').disabled = currentPage === 1; document.getElementById('nextBtn').disabled = currentPage === totalPages; tbody.innerHTML = '';
+        if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:#999;">📭 全厂暂无符合搜索条件的记录 Found</td></tr>`; return; }
+        
+        // 📅 动态修复：绑定电脑当前的真实实际系统时间进行超期判定
+        const todayStr = getTodayStr();
+        
+        pageData.forEach(item => {
+            const deadline = normalizeDateStr(item.endDate || item.date); const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
+            let color = '#4299e1'; let statusDisplay = `● ${item.status}`;
+            if (item.status === 'Done') { color = '#48bb78'; statusDisplay = `● Done`; } else if (isOverdue) { color = '#e53e3e'; statusDisplay = `⚠️ Overdue`; } else if (item.status === 'InProgress') { color = '#ed8936'; statusDisplay = `● In Progress`; }
+            let persons = item.person ? item.person.split(/,|，/).map(p => `<span class="tag tag-person">${p.trim()}</span>`).join('') : ''; const dateDisplay = getDateDisplay(item.date, item.endDate);
+            tbody.innerHTML += `<tr><td>${dateDisplay.html}<br><span style="color:#a0aec0;font-size:12px">${item.time||''}</span></td><td>${item.type === 'PM' ? '<span class="tag tag-type tag-pm">🛠️ PM</span>' : (item.type === 'Project' ? '<span class="tag tag-type tag-project">🚧 施工</span>' : '<span class="tag tag-type tag-adhoc">⚡ 抢修</span>')}</td><td><span class="tag tag-loc">${item.location}</span></td><td style="font-weight:500">${item.event}</td><td>${item.tools || '-'}</td><td>${item.remarks || '-'}</td><td>${persons}</td><td><span style="color:${color};font-weight:700">${statusDisplay}</span></td><td><div class="action-group"><button class="btn btn-edit" onclick="editItem(${item._id})">Edit</button><button class="btn btn-del" onclick="delItem(${item._id})">Del</button></div></td></tr>`;
+        });
+        updateDropdowns();
+    }
+    function changePage(delta) { currentPage += delta; renderTable(); }
+
+    function renderKanban() {
+        ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { const colEl = document.getElementById(`col-${s}`); if(colEl) colEl.innerHTML=''; const countEl = document.getElementById(`count-${s}`); if(countEl) countEl.innerText='0'; });
+        const filtered = getFilteredData(); let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
+        
+        // 📅 动态修复：超期判定与电脑真实日期动态同步
+        const todayStr = getTodayStr();
+        filtered.forEach(item => {
+            let visualStatus = item.status || 'Planned'; const deadline = normalizeDateStr(item.endDate || item.date);
+            if (visualStatus !== 'Done' && (visualStatus === 'Overdue' || (deadline && deadline < todayStr))) visualStatus = 'Overdue';
+            if(counts.hasOwnProperty(visualStatus)) counts[visualStatus]++;
+            const dateDisplay = getDateDisplay(item.date, item.endDate);
+            const card = document.createElement('div'); card.className = `kanban-card card-${visualStatus}`; card.draggable = true; card.setAttribute('ondragstart', `drag(event, ${item._id})`);
+            card.innerHTML = `<div class="k-title">${item.event}</div><div class="k-meta"><span>📅 ${dateDisplay.raw}</span><span>📍 ${item.location}</span></div><div class="k-footer"><span class="k-person">👤 ${item.person||''}</span><button class="btn-edit" onclick="editItem(${item._id})">✎</button></div>`;
+            const colContainer = document.getElementById(`col-${visualStatus}`); if(colContainer) colContainer.appendChild(card);
+        });
+        for(let k in counts) { const countBox = document.getElementById(`count-${k}`); if(countBox) countBox.innerText = counts[k]; }
+    }
+    
+    function allowDrop(ev) { ev.preventDefault(); const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.add('drag-over'); }
+    function dragLeave(ev) { const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.remove('drag-over'); }
+    function drag(ev, id) { ev.dataTransfer.setData("text/plain", id); }
+    function drop(ev, newStatus) { 
+        ev.preventDefault(); const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.remove('drag-over'); 
+        var taskId = ev.dataTransfer.getData("text/plain");
+        if (taskId !== "" && workData[taskId]) { workData[taskId].status = newStatus; refreshView(); pushToCloud(); } 
+    }
+
+    function saveData() {
+        const idx = document.getElementById('editIndex').value;
+        const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value };
+        if(idx === '-1') workData.push(task); else workData[idx] = task;
+        closeModal(); refreshView(); pushToCloud(); 
+    }
+    function delItem(idx) { if(confirm("确定删除本条排班记录吗?")) { workData.splice(idx, 1); refreshView(); pushToCloud(); } }
+
+    function renderScheduler() {
+        const table = document.getElementById('schedulerTable'); table.innerHTML = '';
+        const monthVal = document.getElementById('schMonth').value; if(!monthVal) return;
+        const [year, month] = monthVal.split('-').map(Number);
+        document.getElementById('schedulerTitle').innerText = `${year}年 ${month}月 排程总览`;
+        const daysInMonth = new Date(year, month, 0).getDate(); const now = new Date();
+        const WEEK_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+        let thead = '<thead><tr><th class="col-person">人员 / 日期</th>';
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateObj = new Date(year, month-1, d); const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            
+            // 📅 动态修复：日历蓝条高亮自动跟随实际电脑当前的真实天数，拒绝锁死
+            const isToday = (year === now.getFullYear() && month === (now.getMonth() + 1) && d === now.getDate());
+            
+            let bg = appConfig.holidays && appConfig.holidays.includes(dateStr) ? '#fed7d7' : ((dateObj.getDay()===0||dateObj.getDay()===6)?'#fcebd0':'#f8fafc');
+            thead += `<th class="${isToday?'th-today':''}" style="background:${isToday?'':bg}; min-width:36px;">${d}<br><span style="font-size:9px; font-weight:normal;">${WEEK_NAMES[dateObj.getDay()]}</span></th>`;
+        }
+        table.innerHTML += thead + '</tr></thead>';
+
+        let people = new Set(); workData.forEach(t => { if(t.person) t.person.split(/,|，/).forEach(p => people.add(p.trim())); });
+        let personList = appConfig.personOrder ? appConfig.personOrder.filter(p => people.has(p)) : []; Array.from(people).forEach(p => { if(!personList.includes(p)) personList.push(p); });
+
+        let tbody = '<tbody>';
+        personList.forEach(p => {
+            if(!p) return;
+            tbody += `<tr><td class="col-person">${p}</td>`;
+            for(let d=1; d<=daysInMonth; d++) {
+                const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const dateObj = new Date(year, month-1, d);
+                
+                // 📅 单元格高亮动态跟随当前实际今天
+                let cellClass = (year === now.getFullYear() && month === (now.getMonth() + 1) && d === now.getDate()) ? 'bg-today' : ((appConfig.holidays && appConfig.holidays.includes(cellDateStr)) ? 'bg-holiday' : ((dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'bg-weekend' : ''));
+                
+                const tasks = workData.map((t,i)=>({...t,_id:i})).filter(t => {
+                    const start = normalizeDateStr(t.date); const end = normalizeDateStr(t.endDate) || start;
+                    return t.person && t.person.includes(p) && cellDateStr >= start && cellDateStr <= end;
+                });
+                let content = '';
+                tasks.forEach(t => {
+                    let typeClass = t.type==='PM'?'sch-task-PM':(t.type==='Adhoc'?'sch-task-adhoc':''); if(t.status === 'Done') typeClass += ' sch-task-done';
+                    content += `<div class="sch-task ${typeClass}" onclick="event.stopPropagation(); editItem(${t._id})">${t.event}</div>`;
+                });
+                tbody += `<td class="${cellClass} cell-clickable" onclick="openModalWithDate('${cellDateStr}', '${p}')">${content}</td>`;
+            }
+            tbody += '</tr>';
+        });
+        table.innerHTML += tbody + '</tbody>';
+    }
+
+    function openModalWithDate(date, person) { openModal(); document.getElementById('inDate').value = date; document.getElementById('inPerson').value = person; }
+    
+    function renderDashboard() {
+        const total = workData.length; const todayStr = getTodayStr();
+        let done = 0; let inProgress = 0; let overdueCount = 0; let todayCount = 0;
+        workData.forEach(task => {
+            const dateStr = normalizeDateStr(task.date); const deadline = normalizeDateStr(task.endDate || task.date);
+            if(dateStr === todayStr) todayCount++;
+            if (task.status === 'Done') done++; else if (task.status === 'Overdue' || (deadline && deadline < todayStr)) overdueCount++; else if (task.status === 'InProgress') inProgress++;
+        });
+        document.getElementById('kpi-today').innerText = todayCount; document.getElementById('kpi-overdue').innerText = overdueCount; document.getElementById('kpi-progress').innerText = inProgress; document.getElementById('kpi-done').innerText = done;
+        
+        let typeMap = { 'PM': 0, 'Project': 0, 'Adhoc': 0, 'Other': 0 }, personMap = {}, locMap = {};
+        workData.forEach(t => { 
+            let rawType = t.type || 'Other';
+            if(typeMap.hasOwnProperty(rawType)) typeMap[rawType]++; else typeMap['Other']++;
+            if(t.person) t.person.split(/,|，/).forEach(p => { if(p.trim()) personMap[p.trim()] = (personMap[p.trim()] || 0) + 1; });
+            if(t.location) locMap[t.location] = (locMap[t.location] || 0) + 1;
+        });
+        renderChart('chartType', 'doughnut', ['PM (预防)', 'Project (施工)', 'Adhoc (抢修)', 'Other'], [typeMap['PM'], typeMap['Project'], typeMap['Adhoc'], typeMap['Other']], 'Type', [COLORS.teal, COLORS.purple, COLORS.orange, COLORS.gray]);
+        renderChart('chartStatus', 'pie', ['Planned', 'InProgress', 'Done', 'Overdue'], [total-done-inProgress-overdueCount, inProgress, done, overdueCount], 'Status', [COLORS.blue, COLORS.orange, COLORS.green, COLORS.red]);
+        const sortedPersons = Object.entries(personMap).sort((a,b) => b[1] - a[1]).slice(0, 10); renderChart('chartPerson', 'bar', sortedPersons.map(p => p[0]), sortedPersons.map(p => p[1]), 'Tasks', COLORS.blue);
+        const sortedLocs = Object.entries(locMap).sort((a,b) => b[1] - a[1]).slice(0, 10); renderChart('chartLoc', 'bar', sortedLocs.map(l => l[0]), sortedLocs.map(l => l[1]), 'Tasks', COLORS.purple);
+    }
+    
+    function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c, borderColor:'#fff', borderWidth:2}]},options:{maintainAspectRatio:false}}); }
+    function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(!ls || !ps) return; ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>'; [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim()))); [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`); }
+    
+    // 📥 CSV 导出功能彻底修复：使用 Blob 和 UTF-8 编码安全隔离特殊字符，保障下载响应
+    function exportToCSV() { 
+        const filtered = getFilteredData(); 
+        if(filtered.length === 0) return alert("没有数据可导出"); 
+        
+        let csvContent = "Type,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; 
+        filtered.forEach(row => { 
+            // 精准包裹转义双引号和特殊字符
+            csvContent += [ 
+                row.type || '', 
+                row.date || '', 
+                row.endDate || '', 
+                row.time || '', 
+                row.location || '', 
+                `"${(row.event || '').replace(/"/g, '""')}"`, 
+                `"${(row.tools || '').replace(/"/g, '""')}"`, 
+                `"${(row.remarks || '').replace(/"/g, '""')}"`, 
+                `"${(row.person || '').replace(/"/g, '""')}"`, 
+                row.status || '' 
+            ].join(",") + "\n"; 
+        }); 
+        
+        // 使用 Blob 携带 BOM 头保障中文字符不乱码，并绕过浏览器对大字符串 URL 的安全拦截
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a"); 
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url); 
+        link.setAttribute("download", `CS_Export_${new Date().toISOString().slice(0,10)}.csv`); 
+        document.body.appendChild(link); 
+        link.click(); 
+        document.body.remove(); 
+        URL.revokeObjectURL(url);
+    }
+    
+    function updateStatus(msg) { const statusEl = document.getElementById('syncStatus'); if(statusEl) statusEl.innerText = msg; }
+    function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; document.getElementById('inPerson').value = currentUser; }
+    function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
+    function editItem(idx) { openModal(); const i=workData[idx]; document.getElementById('editIndex').value=idx; document.getElementById('inType').value=i.type || 'PM'; document.getElementById('inDate').value=i.date; document.getElementById('inEndDate').value=i.endDate || ''; document.getElementById('inTime').value=i.time || ''; document.getElementById('inLoc').value=i.location; document.getElementById('inEvent').value=i.event; document.getElementById('inPerson').value=i.person; document.getElementById('inStatus').value=i.status; document.getElementById('inTools').value=i.tools || ''; document.getElementById('inRemarks').value=i.remarks || ''; }
+</script>
+</body>
+</html>
