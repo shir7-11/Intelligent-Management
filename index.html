@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS Dept. Intelligent Work Management</title>
+    <title>Intelligent Work Management</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 🟢 全局基础与变量 */
-        :root { 
+
+        /* 🟢 全局基础与变量 */        :root { 
             --primary: #2d3748;
             --accent: #4299e1;
             --success: #48bb78;
@@ -188,7 +188,7 @@
 
 <div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a202c;z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;color:white;">
     <h2 style="margin-bottom:8px; font-weight:800; font-size:32px;">👋 Welcome</h2>
-    <h3 style="margin:0 0 30px 0; font-size:16px; font-weight:400; opacity:0.7; letter-spacing:1px;">CS INTELLIGENT WORK MANAGEMENT</h3>
+    <h3 style="margin:0 0 30px 0; font-size:16px; font-weight:400; opacity:0.7; letter-spacing:1px;">INTELLIGENT WORK MANAGEMENT</h3>
     
     <div style="background:rgba(255,255,255,0.1); padding:30px; border-radius:16px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1);">
         <p style="margin-bottom:15px;opacity:0.9;font-size:14px;font-weight:600;">请输入您的姓名登记访问</p>
@@ -202,7 +202,7 @@
 <div class="container" id="mainApp">
     <header>
         <div class="brand">
-            <h1>CS Dept. Intelligent Work Management</h1>
+            <h1>Intelligent Work Management</h1>
         </div>
         <div class="view-switcher">
             <button class="view-btn active" onclick="switchView('list')">📋 列表 List</button>
@@ -212,7 +212,7 @@
         </div>
         <div class="controls">
             <span style="font-size:12px;color:#4a5568;font-weight:700;margin-right:8px;">👤 <span id="displayUser">Guest</span></span>
-            <span id="syncStatus">🔄 正在连接全厂共享云服务器...</span>
+            <span id="syncStatus">💻 单机离线状态</span>
             <div id="listControls" style="display:flex; gap:8px;">
                 <div id="schedulerControls" style="display:none; gap:10px;">
                     <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示</button>
@@ -227,7 +227,8 @@
             </div>
             <button class="btn btn-export" onclick="exportToCSV()">📥 CSV导出</button>
             <button class="btn btn-add" onclick="openModal()">+ New Task</button>
-            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">↻ 手动同步云端</button>
+            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">📥 手动下载云端</button>
+            <button class="btn btn-upload" onclick="pushToCloud()" style="background:#2b6cb0;">📤 手动上传云端</button>
         </div>
     </header>
 
@@ -309,7 +310,7 @@
         <div class="form-group"><label>状态 Status</label><select id="inStatus"><option value="Planned">Planned (Blue)</option><option value="InProgress">In Progress (Orange)</option><option value="Done">Done (Green)</option><option value="Overdue" style="color:red; font-weight:bold;">⚠️ Overdue (Force Flag)</option></select></div>
         <div style="text-align:right; margin-top:30px;">
             <button class="btn" style="background:#edf2f7; color:#4a5568" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">实时同步至云端</button>
+            <button class="btn btn-add" style="margin-left:10px;" onclick="saveData()">本地保存 Task</button>
         </div>
     </div>
 </div>
@@ -429,7 +430,7 @@
         {"type":"PM","date":"2026-03-27","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-04-01","location":"131生产楼废水房","event":"131活性炭/121软化器月度消毒","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-04-02","location":"121生产楼","event":"121活性炭月度消毒","person":"刘文杰","status":"Done"},
-        {"type":"PM","date":"2026-04-27","location":"231仓库","event":"9420二氧化碳机组维护","person":"刘伟","status":"Done"},
+        {"type":"PM","date":"2026-04-27","location":"231仓库","event":"9420二氧化摊机组维护","person":"刘伟","status":"Done"},
         {"type":"PM","date":"2026-03-25","location":"全厂","event":"废液装置季度维护","person":"郭洪","status":"Done"},
         {"type":"PM","date":"2026-03-27","time":"15:00-18:00","location":"132危废品库","event":"9901空调箱季度/半年度/年度维护","person":"陈苏宁","status":"Done"},
         {"type":"PM","date":"2026-05-07","endDate":"2026-05-08","location":"全厂","event":"排风机-半年度/年度（9003/9711/95**/94**）","person":"刘伟，陈苏宁，郭洪，张文献","status":"Done","remarks":"中班"},
@@ -506,13 +507,14 @@
     let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
     
-    // 🌐 中央共享云服务总线配置
-    const MY_JSON_ID = '6a1fb02bd1ea1641042b93fc';     
-    const MY_JSON_TOKEN = '$2a$10$uE7cHdzsubRL7ND0cXJEm4OGuw12I0Ce7iVHGDyEj9FdPv5AAOIQ2q'; 
-    const API_URL = `https://api.myjson.online/v1/records/${MY_JSON_ID}`;
+    // 🌐 【云数据库总线配置】
+    const SUPABASE_URL = 'https://cxnwbcxtdvcwpzpxdffl.supabase.co/rest/v1/'; 
+    const SUPABASE_KEY = 'sb_publishable_3-Ov0JCbyFzALUSlDTm7yQ_dsbpv_yO'; 
+    const API_URL = `${SUPABASE_URL}/rest/v1/work_tasks?id=eq.1`;
 
     let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
 
+    // 🔑 1. 登录：从本地拉起地基
     function checkLogin() {
         const input = document.getElementById('loginName').value.trim();
         if(input.length > 0) {
@@ -520,73 +522,82 @@
             document.getElementById('displayUser').innerText = currentUser;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            fetchData();
+            initLocalData();
         } else { alert("请填写您的姓名"); }
     }
     
     if(sessionStorage.getItem('current_user')) {
         currentUser = sessionStorage.getItem('current_user'); document.getElementById('displayUser').innerText = currentUser;
         document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block';
-        fetchData();
+        initLocalData();
     }
 
-    // 🌐 智能双通道中央云端总线异步核账网道
-    async function fetchData() {
-        updateStatus('🔄 正在同步全厂云端排班...');
-        const now = new Date();
-        try {
-            // 首先从设备独立硬缓充区拉出基础，彻底阻断由于网络问题带来的空白和Loading
-            if(localStorage.getItem('cs_work_data_v3') && JSON.parse(localStorage.getItem('cs_work_data_v3')).length > 0) {
-                workData = JSON.parse(localStorage.getItem('cs_work_data_v3'));
-            } else {
-                workData = INITIAL_TASKS; // 🛡️ 本地176条完好物理底座瞬间防空留白
-            }
-            
-            const schMonth = document.getElementById('schMonth');
-            if (schMonth && !schMonth.value) {
-                // 📅 升级：自动跟随当前实际月份，一登录系统直接亮起 2026年6月
-                schMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            }
-            updateStatus('✅ 云端同步就绪');
-            refreshView();
+    // 💻 2. 本地初始化：所有人登录或刷新，秒速亮起数据，不走云端
+    function initLocalData() {
+        const schMonth = document.getElementById('schMonth');
+        if (schMonth && !schMonth.value) {
+            const now = new Date();
+            schMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+        
+        if(localStorage.getItem('sys_work_data_v3') && JSON.parse(localStorage.getItem('sys_work_data_v3')).length > 0) {
+            workData = JSON.parse(localStorage.getItem('sys_work_data_v3'));
+        } else {
+            workData = INITIAL_TASKS; 
+        }
+        updateStatus('💻 单机离线状态 (本地数据未同步)');
+        refreshView();
+    }
 
-            // 在后台异步穿透向中央服务器请求最新数据更新
-            const res = await fetch(API_URL + '?t=' + now.getTime(), {
-                headers: { 'x-api-key': MY_JSON_TOKEN }
+    // 📥 3. 【纯手动下载】：只有点击“手动下载云端”按钮才会触发请求，获取全厂最新排班
+    async function fetchData() {
+        updateStatus('🔄 正在拉取云端数据...');
+        try {
+            const res = await fetch(API_URL, {
+                method: 'GET',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
             });
             if(res.ok) {
                 const json = await res.json();
-                const remoteData = json.data || json;
-                if(remoteData && remoteData.tasks && remoteData.tasks.length > 0) {
-                    workData = remoteData.tasks;
-                    localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
-                    refreshView();
+                if(json && json.length > 0 && json[0].task_data && json[0].task_data.tasks) {
+                    workData = json[0].task_data.tasks;
+                    localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
+                    updateStatus('📥 手动下载成功：已拉取最新排班！');
+                    refreshView(); 
+                } else {
+                    updateStatus('💡 云端暂无合并数据');
                 }
-            }
+            } else { throw new Error(); }
         } catch (e) {
-            console.log("本地备份已成功接管全厂排班");
+            updateStatus('❌ 下载失败，请确认凭证或网络');
         }
     }
 
-    // 💾 变更发生时本地固化并一键强力推上中央服务器
+    // 📤 4. 【纯手动上传】：只有点击“手动上传云端”按钮才会把本电脑的最新排班广播给全厂
     async function pushToCloud() {
-        localStorage.setItem('cs_work_data_v3', JSON.stringify(workData));
-        updateStatus('⏳ 正在同步至中央云端...');
-        const packet = { tasks: workData, config: { holidays: appConfig.holidays, makeupDays: appConfig.makeupDays, personOrder: appConfig.personOrder } };
+        updateStatus('⏳ 正在打包并手动上传...');
+        const packet = { task_data: { tasks: workData } };
         try {
             const res = await fetch(API_URL, {
-                method: 'PUT',
+                method: 'PATCH', 
                 headers: { 
                     'Content-Type': 'application/json',
-                    'x-api-key': MY_JSON_TOKEN
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
                 },
                 body: JSON.stringify(packet)
             });
-            if(!res.ok) throw new Error("存储拒绝");
-            updateStatus('✅ 排班已全厂同步');
+            if(!res.ok) throw new Error();
+            updateStatus('📤 手动上传成功：全厂云端排班已更新！');
         } catch (e) {
-            updateStatus('❌ 实时云同步失败');
+            updateStatus('❌ 上传失败，本地排班未丢失');
         }
+    }
+
+    // 获取当前实际电脑时间字符串 (格式: YYYY-MM-DD)
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
     function normalizeDateStr(dateStr) {
@@ -613,7 +624,6 @@
         return { html: html, raw: s };
     }
 
-    // 📊 重构卡点机制：精准在可见性树建立、DOM盒完成展开的 60 毫秒后，再对 Chart 进行像素级画图
     function switchView(viewName) {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         const activeBtn = document.querySelector(`.view-btn[onclick*="${viewName}"]`);
@@ -634,13 +644,13 @@
             if(viewName === 'kanban') renderKanban(); 
             if(viewName === 'list') renderTable(); 
             if(viewName === 'dashboard') {
-                setTimeout(renderDashboard, 60); // 👈 完美拦截白板顽疾
+                setTimeout(renderDashboard, 60); 
             }
         }
     }
     
     function enterPresentationMode() { switchView('scheduler'); const elem = document.documentElement; if (elem.requestFullscreen) elem.requestFullscreen(); }
-    function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); }
+    function refreshView() { currentPage = 1; if(document.getElementById('listView').classList.contains('show-view')) renderTable(); if(document.getElementById('kanbanView').classList.contains('show-view')) renderKanban(); if(document.getElementById('dashboardView').classList.contains('show-view')) renderDashboard(); if(document.getElementById('schedulerView').classList.contains('show-view')) renderScheduler(); }
 
     function getFilteredData() {
         const search = document.getElementById('searchInput').value.toUpperCase(); const locFilter = document.getElementById('locFilter').value; const personFilter = document.getElementById('personFilter').value; const typeFilter = document.getElementById('typeFilter').value;
@@ -654,8 +664,7 @@
         document.getElementById('pageInfo').innerText = totalItems === 0 ? 'No data' : `Showing ${startIdx + 1}-${Math.min(startIdx + itemsPerPage, totalItems)} of ${totalItems}`; document.getElementById('prevBtn').disabled = currentPage === 1; document.getElementById('nextBtn').disabled = currentPage === totalPages; tbody.innerHTML = '';
         if(pageData.length === 0) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:#999;">📭 全厂暂无符合搜索条件的记录 Found</td></tr>`; return; }
         
-        // 📅 核心修正：去除原本写死的今天判断，让超期（Overdue）逻辑精准以2026年6月24日实际日子为分界线
-        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const todayStr = getTodayStr();
         
         pageData.forEach(item => {
             const deadline = normalizeDateStr(item.endDate || item.date); const isOverdue = (item.status !== 'Done') && (item.status === 'Overdue' || (deadline && deadline < todayStr));
@@ -671,7 +680,8 @@
     function renderKanban() {
         ['Planned', 'InProgress', 'Done', 'Overdue'].forEach(s => { const colEl = document.getElementById(`col-${s}`); if(colEl) colEl.innerHTML=''; const countEl = document.getElementById(`count-${s}`); if(countEl) countEl.innerText='0'; });
         const filtered = getFilteredData(); let counts = { Planned: 0, InProgress: 0, Done: 0, Overdue: 0 };
-        const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        
+        const todayStr = getTodayStr();
         filtered.forEach(item => {
             let visualStatus = item.status || 'Planned'; const deadline = normalizeDateStr(item.endDate || item.date);
             if (visualStatus !== 'Done' && (visualStatus === 'Overdue' || (deadline && deadline < todayStr))) visualStatus = 'Overdue';
@@ -690,16 +700,36 @@
     function drop(ev, newStatus) { 
         ev.preventDefault(); const parentCol = ev.currentTarget; if(parentCol) parentCol.classList.remove('drag-over'); 
         var taskId = ev.dataTransfer.getData("text/plain");
-        if (taskId !== "" && workData[taskId]) { workData[taskId].status = newStatus; refreshView(); pushToCloud(); } 
+        if (taskId !== "" && workData[taskId]) { 
+            workData[taskId].status = newStatus; 
+            localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
+            refreshView(); 
+            updateStatus('💾 看板状态已在本地变更（尚未手动上传）');
+        } 
     }
 
+    // 📝 5. 任务保存：纯单机保存
     function saveData() {
         const idx = document.getElementById('editIndex').value;
         const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value };
+        
+        if (workData.length === 0) workData = [...INITIAL_TASKS];
         if(idx === '-1') workData.push(task); else workData[idx] = task;
-        closeModal(); refreshView(); pushToCloud(); 
+        
+        localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
+        closeModal(); 
+        refreshView(); 
+        updateStatus('💾 任务已保存至本地电脑（需要你点击按钮进行手动上传）');
     }
-    function delItem(idx) { if(confirm("确定删除本条排班记录吗?")) { workData.splice(idx, 1); refreshView(); pushToCloud(); } }
+    
+    function delItem(idx) { 
+        if(confirm("确定在本地删除本条排班记录吗?")) { 
+            workData.splice(idx, 1); 
+            localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
+            refreshView(); 
+            updateStatus('❌ 记录已在本地移除（需要手动上传生效）');
+        } 
+    }
 
     function renderScheduler() {
         const table = document.getElementById('schedulerTable'); table.innerHTML = '';
@@ -712,10 +742,7 @@
         let thead = '<thead><tr><th class="col-person">人员 / 日期</th>';
         for(let d=1; d<=daysInMonth; d++) {
             const dateObj = new Date(year, month-1, d); const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            
-            // 📅 核心修正：精准绑定中央实际时间，高亮深蓝色条将全自动锁死在 6月24日，绝不错位
             const isToday = (year === now.getFullYear() && month === (now.getMonth() + 1) && d === now.getDate());
-            
             let bg = appConfig.holidays && appConfig.holidays.includes(dateStr) ? '#fed7d7' : ((dateObj.getDay()===0||dateObj.getDay()===6)?'#fcebd0':'#f8fafc');
             thead += `<th class="${isToday?'th-today':''}" style="background:${isToday?'':bg}; min-width:36px;">${d}<br><span style="font-size:9px; font-weight:normal;">${WEEK_NAMES[dateObj.getDay()]}</span></th>`;
         }
@@ -731,8 +758,6 @@
             for(let d=1; d<=daysInMonth; d++) {
                 const cellDateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const dateObj = new Date(year, month-1, d);
-                
-                // 📅 单元格高亮同步调整为真实的实际今天
                 let cellClass = (year === now.getFullYear() && month === (now.getMonth() + 1) && d === now.getDate()) ? 'bg-today' : ((appConfig.holidays && appConfig.holidays.includes(cellDateStr)) ? 'bg-holiday' : ((dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'bg-weekend' : ''));
                 
                 const tasks = workData.map((t,i)=>({...t,_id:i})).filter(t => {
@@ -754,7 +779,7 @@
     function openModalWithDate(date, person) { openModal(); document.getElementById('inDate').value = date; document.getElementById('inPerson').value = person; }
     
     function renderDashboard() {
-        const total = workData.length; const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        const total = workData.length; const todayStr = getTodayStr();
         let done = 0; let inProgress = 0; let overdueCount = 0; let todayCount = 0;
         workData.forEach(task => {
             const dateStr = normalizeDateStr(task.date); const deadline = normalizeDateStr(task.endDate || task.date);
@@ -778,7 +803,20 @@
     
     function renderChart(id,t,l,d,lb,c){ const ctx=document.getElementById(id).getContext('2d'); if(chartInstances[id])chartInstances[id].destroy(); chartInstances[id]=new Chart(ctx,{type:t,data:{labels:l,datasets:[{label:lb,data:d,backgroundColor:c, borderColor:'#fff', borderWidth:2}]},options:{maintainAspectRatio:false}}); }
     function updateDropdowns() { const ls=document.getElementById('locFilter'), ps=document.getElementById('personFilter'); if(!ls || !ps) return; ls.innerHTML = '<option value="">📍 Location</option>'; ps.innerHTML = '<option value="">👤 Person</option>'; [...new Set(workData.map(i=>i.location).filter(Boolean))].forEach(l=>ls.innerHTML+=`<option>${l}</option>`); let ns=[]; workData.forEach(i=>i.person&&i.person.split(/,|，/).forEach(n=>ns.push(n.trim()))); [...new Set(ns.filter(Boolean))].forEach(p=>ps.innerHTML+=`<option>${p}</option>`); }
-    function exportToCSV() { const filtered = getFilteredData(); if(filtered.length === 0) return alert("没有数据可导出"); let csvContent = "data:text/csv;charset=utf-8,\uFEFFType,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; filtered.forEach(row => { csvContent += [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '')}"`, `"${(row.tools || '')}"`, `"${(row.remarks || '')}"`, `"${(row.person || '')}"`, row.status || '' ].join(",") + "\n"; }); const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `CS_Export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.remove(); }
+    
+    function exportToCSV() { 
+        const filtered = getFilteredData(); 
+        if(filtered.length === 0) return alert("没有数据可导出"); 
+        let csvContent = "Type,StartDate,EndDate,Time,Location,Event,Tools,Remarks,Person,Status\n"; 
+        filtered.forEach(row => { 
+            csvContent += [ row.type || '', row.date || '', row.endDate || '', row.time || '', row.location || '', `"${(row.event || '').replace(/"/g, '""')}"`, `"${(row.tools || '').replace(/"/g, '""')}"`, `"${(row.remarks || '').replace(/"/g, '""')}"`, `"${(row.person || '').replace(/"/g, '""')}"`, row.status || '' ].join(",") + "\n"; 
+        }); 
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a"); const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url); link.setAttribute("download", `Work_Export_${new Date().toISOString().slice(0,10)}.csv`); 
+        document.body.appendChild(link); link.click(); document.body.remove(); URL.revokeObjectURL(url);
+    }
+    
     function updateStatus(msg) { const statusEl = document.getElementById('syncStatus'); if(statusEl) statusEl.innerText = msg; }
     function openModal() { document.getElementById('taskModal').style.display='block'; document.getElementById('editIndex').value='-1'; isEditing=true; document.getElementById('inPerson').value = currentUser; }
     function closeModal() { document.getElementById('taskModal').style.display='none'; isEditing=false; }
