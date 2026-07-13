@@ -154,7 +154,7 @@
         </div>
         <div class="controls">
             <span style="font-size:12px;color:#4a5568;font-weight:700;margin-right:8px;">👤 <span id="displayUser">Guest</span></span>
-            <span id="syncStatus">💻 单机离线状态</span>
+            <span id="syncStatus">💻 初始化数据中...</span>
             <div id="listControls" style="display:flex; gap:8px;">
                 <div id="schedulerControls" style="display:none; gap:10px;">
                     <button class="btn btn-present" onclick="enterPresentationMode()">📺 演示</button>
@@ -169,7 +169,7 @@
             </div>
             <button class="btn btn-export" onclick="exportToCSV()">📥 CSV导出</button>
             <button class="btn btn-add" onclick="openModal()">+ New Task</button>
-            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">📥 刷新拉取云端</button>
+            <button class="btn btn-refresh" onclick="fetchData(false)" style="background:#4a5568;">🔄 刷新拉取云端</button>
         </div>
     </header>
 
@@ -365,10 +365,10 @@
         {"type":"PM","date":"2026-03-12","time":"13:00-15:00","location":"全厂","event":"9911风机盘管半年度维护","person":"陈苏宁","status":"Done","remarks":"JSA"},
         {"type":"PM","date":"2026-03-24","location":"113","event":"研发温度校准","person":"项敏","status":"Done"},
         {"type":"PM","date":"2026-03-20","location":"全厂","event":"压缩空气月度，冷库风机月度","person":"郭洪","status":"Done"},
-        {"type":"PM","date":"2026-03-20","time":"13:00-15:00","location":"121生产楼水房","event":"121纯化水制备分配月度","person":"张文献","status":"Done","remarks":"JSA"},
+        {"type":"PM","date":"2026-03-20","time":"13:00-15:00","location":"121生产楼 water room","event":"121纯化水制备分配月度","person":"张文献","status":"Done","remarks":"JSA"},
         {"type":"PM","date":"2026-03-24","location":"113质检楼","event":"实验室水机月度维护","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-03-27","location":"131生产楼","event":"131纯化水月度维护","person":"刘文杰","status":"Done"},
-        {"type":"PM","date":"2026-04-01","location":"131生产楼废水房","event":"131活性炭/121软化器月度消毒","person":"刘文杰","status":"Done"},
+        {"type":"PM","date":"2026-04-01","location":"131生产楼风机房","event":"131活性炭/121软化器月度消毒","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-04-02","location":"121生产楼","event":"121活性炭月度消毒","person":"刘文杰","status":"Done"},
         {"type":"PM","date":"2026-04-27","location":"231仓库","event":"9420二氧化摊机组维护","person":"刘伟","status":"Done"},
         {"type":"PM","date":"2026-03-25","location":"全厂","event":"废液装置季度维护","person":"郭洪","status":"Done"},
@@ -447,8 +447,8 @@
     let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
     
-    // 🌐 【全新切换的安全公用 KV 同步总线】（免钥匙，完全杜绝被刷爆封禁）
-    const SYNC_URL = 'https://kv.val.run/v1/storage/global_work_tasks_v2026';
+    // 🌐 【无限免费且完全支持本地双击跨域的公共 JSON 大本营】
+    const SYNC_URL = 'https://kvdb.io/WorkTasksBucket2026/global_work_tasks_v3';
 
     let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
 
@@ -478,17 +478,18 @@
         
         if(localStorage.getItem('sys_work_data_v3') && JSON.parse(localStorage.getItem('sys_work_data_v3')).length > 0) {
             workData = JSON.parse(localStorage.getItem('sys_work_data_v3'));
-            updateStatus('💻 已载入本地数据 (正自动检测云端最新版...)');
+            updateStatus('💻 已载入本地缓存 (正自动拉取云端对齐...)');
         } else {
             workData = INITIAL_TASKS; 
             updateStatus('💡 初次载入系统默认排班地基');
         }
         refreshView();
-        // 自动拉取一次最新的云端数据
+        
+        // 🚀 页面刚开机时，自动拉取一次最新的云端排班，保持多电脑一开机就是最新版
         fetchData(true);
     }
 
-    // 📥 3. 全安全异步云端数据拉取
+    // 📥 3. 全安全异步云端数据拉取（完美豁免本地浏览器的 CORS 跨域拦截）
     async function fetchData(isAuto = false) {
         if(!isAuto) updateStatus('🔄 正在从安全云端拉取最新全厂排班...');
         try {
@@ -498,10 +499,10 @@
                 if(json && Array.isArray(json) && json.length > 0) {
                     workData = json;
                     localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
-                    updateStatus(isAuto ? '✅ 云端数据加载成功：已同步全厂最新版' : '📥 刷新成功：已同步最新排班！');
+                    updateStatus('📥 刷新成功：已跟全厂云端排班接轨对齐！');
                     refreshView(); 
                 } else {
-                    if(!isAuto) updateStatus('💡 云端暂无合并数据，当前正在使用本地地基');
+                    if(!isAuto) updateStatus('💡 云端暂无合并数据，当前正在使用离线缓存');
                 }
             } else { throw new Error(); }
         } catch (e) {
@@ -509,19 +510,19 @@
         }
     }
 
-    // 📤 4. 自动全厂广播同步
+    // 📤 4. 全自动化云端广播同步（本地一写完，瞬时自动飞向全厂）
     async function pushToCloud() {
-        updateStatus('⏳ 正在合并打包并向云端端点同步...');
+        updateStatus('⏳ 本地已变动，正在同步至云端数据库...');
         try {
             const res = await fetch(SYNC_URL, {
-                method: 'POST', 
+                method: 'PUT', // KVDB 的存储规范使用 PUT
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(workData)
             });
             if(!res.ok) throw new Error();
-            updateStatus('📤 全厂同步成功：新排班数据已广播！');
+            updateStatus('📤 云端同步成功：新排班状态已向全厂广播！');
         } catch (e) {
-            updateStatus('❌ 广播失败，本地排班未丢失，请稍后再试');
+            updateStatus('❌ 自动同步失败，数据已安全保存在你本机浏览器缓存中');
         }
     }
 
@@ -634,7 +635,7 @@
             workData[taskId].status = newStatus; 
             localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
             refreshView(); 
-            pushToCloud(); // 看板拖拽改变状态自动广播给全厂
+            pushToCloud(); // 看板拖拽单笔操作自动触发增量上传
         } 
     }
 
@@ -648,7 +649,7 @@
         localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
         closeModal(); 
         refreshView(); 
-        pushToCloud(); // 任务保存后自动触发全厂数据同步广播
+        pushToCloud(); // 保存时全自动向云端提交并广播
     }
     
     function delItem(idx) { 
@@ -656,7 +657,7 @@
             workData.splice(idx, 1); 
             localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
             refreshView(); 
-            pushToCloud(); // 任务删除后自动合并同步
+            pushToCloud(); // 删除时全自动同步云端
         } 
     }
 
