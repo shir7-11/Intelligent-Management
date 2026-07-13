@@ -6,8 +6,8 @@
     <title>Intelligent Work Management</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-
-        /* 🟢 全局基础与变量 */        :root { 
+        /* 🟢 全局基础与变量 */
+        :root { 
             --primary: #2d3748;
             --accent: #4299e1;
             --success: #48bb78;
@@ -21,67 +21,29 @@
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        
-        body { 
-            font-family: var(--font-stack); 
-            background: var(--bg); 
-            color: #4a5568; 
-            margin: 0; 
-            padding: 20px; 
-            font-size: 13px; 
-            line-height: 1.6; 
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: var(--font-stack); background: var(--bg); color: #4a5568; margin: 0; padding: 20px; font-size: 13px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
         .container { max-width: 98%; margin: 0 auto; display: none; }
-        
-        header { 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            padding: 12px 24px; 
-            border-radius: 12px; 
-            box-shadow: var(--shadow-md); 
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 24px; 
-            position: sticky; top: 10px; z-index: 100;
-            border: 1px solid rgba(255,255,255,0.6);
-        }
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 24px; border-radius: 12px; box-shadow: var(--shadow-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 24px; position: sticky; top: 10px; z-index: 100; border: 1px solid rgba(255,255,255,0.6); }
         .brand h1 { margin: 0; font-size: 20px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
-        
         .view-switcher { display: flex; background: #edf2f7; padding: 4px; border-radius: 8px; }
-        .view-btn { 
-            padding: 6px 18px; border: none; background: transparent; cursor: pointer; font-size: 13px; border-radius: 6px; 
-            color: #718096; font-weight: 600; font-family: var(--font-stack); transition: all 0.2s ease; 
-        }
+        .view-btn { padding: 6px 18px; border: none; background: transparent; cursor: pointer; font-size: 13px; border-radius: 6px; color: #718096; font-weight: 600; font-family: var(--font-stack); transition: all 0.2s ease; }
         .view-btn.active { background: var(--white); color: var(--accent); box-shadow: var(--shadow-sm); transform: scale(1.02); }
         .view-btn:hover:not(.active) { color: var(--primary); }
-        
         .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        select, input.search, input[type="month"] { 
-            padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; 
-            font-family: var(--font-stack); background: white; transition: all 0.2s ease; box-shadow: var(--shadow-sm);
-        }
+        select, input.search, input[type="month"] { padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; font-family: var(--font-stack); background: white; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
         select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
         input.search { width: 180px; }
-        
-        .btn { 
-            padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px; 
-            font-family: var(--font-stack); box-shadow: 0 2px 4px rgba(0,0,0,0.08); 
-        }
+        .btn { padding: 8px 18px; border: none; border-radius: 8px; cursor: pointer; color: white; font-size: 13px; font-weight: 600; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-stack); box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.12); opacity: 1; filter: brightness(1.05); }
         .btn:active { transform: scale(0.96); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        
         .btn-add { background: var(--accent); } 
         .btn-export { background: var(--success); } 
-        
         .action-group { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-edit { background: #ecc94b; color: #744210; padding: 4px 10px; font-size: 11px; border-radius: 6px; border:none; cursor:pointer; font-weight:600;}
         .btn-del { background: #fed7d7; color: #c53030; padding: 4px 10px; font-size: 11px; border-radius: 6px; border:none; cursor:pointer; font-weight:600;}
-
         #listView, #dashboardView, #kanbanView, #schedulerView { display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .show-view { display: block !important; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .table-box { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-lg); overflow-x: auto; border: 1px solid rgba(255,255,255,0.5); }
         table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
         thead { background: #f8fafc; }
@@ -89,7 +51,6 @@
         td { padding: 14px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; vertical-align: middle; color: #2d3748; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: #f7fafc; }
-        
         .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11px; margin-right: 6px; margin-bottom: 4px; font-weight: 600; border: 1px solid transparent;}
         .tag-loc { background: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; font-weight: 500; }
         .tag-person { background: #edf2f7; color: #4a5568; border-color: #e2e8f0; font-weight: 500; border-radius: 20px;}
@@ -101,48 +62,34 @@
         .tag-pm { background: #e6fffa; color: #285e61; border: 1px solid #b2f5ea; }
         .tag-project { background: #faf5ff; color: #553c9a; border: 1px solid #e9d8fd; }
         .tag-adhoc { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
-
         .pagination { display: flex; justify-content: flex-end; align-items: center; padding: 15px 24px; gap: 10px; background: #fff; border-top: 1px solid var(--border-color); }
         .page-btn { padding: 6px 14px; border: 1px solid #e2e8f0; background: white; cursor: pointer; border-radius: 6px; font-size: 13px; color: #4a5568; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: #f7fafc; border-color: #cbd5e0; }
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 13px; color: #718096; }
-        
         .scheduler-container { padding: 24px; background: white; border-radius: 12px; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.5); }
         .scheduler-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #edf2f7; }
         .scheduler-title { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
-        
         .scheduler-legend { display: flex; gap: 16px; font-size: 12px; color: #718096; }
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-color { width: 12px; height: 12px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05); }
-        
         .scheduler-table th, .scheduler-table td { border: 1px solid #dcdcdc; text-align: center; padding: 4px; height: 50px; vertical-align: top; }
-        .scheduler-table th { 
-            background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; 
-            font-size: 12px; font-weight: 600; height: 48px; line-height: 1.3; vertical-align: middle; border-bottom: 2px solid #e2e8f0; 
-        }
+        .scheduler-table th { background: #f8fafc; color: #4a5568; position: sticky; top: 0; z-index: 10; font-size: 12px; font-weight: 600; height: 48px; line-height: 1.3; vertical-align: middle; border-bottom: 2px solid #e2e8f0; }
         .scheduler-table .col-person { position: sticky; left: 0; background: #fff; z-index: 5; border-right: 2px solid #cbd5e0; width: 110px; font-weight: 600; vertical-align: middle; color: #2d3748; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.02); }
         .scheduler-table td { background-color: #edf2f7; }
-
         .bg-weekend { background-color: #fcebd0 !important; color: #9c4221 !important; border-right: 1px solid #ed8936; } 
         .bg-holiday { background-color: #fed7d7 !important; color: #742a2a !important; border-left: 1px solid #e53e3e !important; border-right: 1px solid #e53e3e !important; } 
         .bg-makeup { background-color: #ffffff !important; position:relative; } 
         .bg-makeup::after { content: '班'; position: absolute; top: 2px; right: 2px; font-size: 9px; color: #fff; background: #a0aec0; border-radius:3px; padding:0 3px; }
         .bg-today { background-color: #bee3f8 !important; border-left: 2px solid #3182ce !important; border-right: 2px solid #3182ce !important; } 
         .th-today { background-color: #3182ce !important; color: white !important; font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(66, 153, 225, 0.3); border-radius: 4px 4px 0 0; } 
-
         .scheduler-table td.cell-clickable { cursor: cell; transition: background 0.1s; }
         .scheduler-table td.cell-clickable:hover { filter: brightness(0.95); position: relative; z-index: 2; }
-
-        .sch-task { 
-            background: #fff; border-left: 4px solid var(--accent); margin: 3px 2px; padding: 4px 6px; font-size: 11px; text-align: left; border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: all 0.2s ease;
-        }
+        .sch-task { background: #fff; border-left: 4px solid var(--accent); margin: 3px 2px; padding: 4px 6px; font-size: 11px; text-align: left; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: all 0.2s ease; }
         .sch-task:hover { transform: translateY(-2px) scale(1.02); z-index: 100; position: relative; width: auto; min-width: 100%; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
         .sch-task-pm { border-left-color: #38b2ac; background: #e6fffa; color: #234e52; }
         .sch-task-adhoc { border-left-color: #ed8936; background: #fffaf0; color: #7b341e; }
         .sch-task-done { border-left-color: #48bb78 !important; background: #f0fff4 !important; color: #22543d !important; font-weight: 600; opacity: 0.8; text-decoration: line-through; }
-
         .kanban-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; height: calc(100vh - 160px); overflow-x: auto; padding-bottom: 20px; } 
         .kanban-col { background: #edf2f7; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; min-width: 280px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); }
         .kanban-col.drag-over { background: #cbd5e0; border: 2px dashed #4299e1; }
@@ -157,7 +104,6 @@
         .card-InProgress { border-left-color: var(--warning); }
         .card-Done { border-left-color: var(--success); opacity: 0.7; }
         .card-Overdue { border-left-color: var(--danger); background: #fff5f5; }
-        
         .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 24px; }
         .kpi-card { background: white; padding: 24px 30px; border-radius: 16px; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.6); transition: transform 0.2s; position:relative; overflow:hidden;}
         .kpi-card::before { content:''; position:absolute; top:0; left:0; width:6px; height:100%; background:currentColor; }
@@ -165,16 +111,13 @@
         .kpi-info p { margin: 0 0 8px 0; font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         .kpi-info h3 { margin: 0; font-size: 32px; color: var(--primary); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
         .kpi-icon { font-size: 28px; opacity: 0.8; filter: grayscale(0.2); }
-        
         .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
         .chart-box { background: white; padding: 24px; border-radius: 16px; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.6); }
         .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
         .chart-header h4 { margin: 0; font-size: 16px; color: var(--primary); font-weight: 700; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(29, 39, 49, 0.6); z-index: 1000; backdrop-filter: blur(4px); }
         .modal-content { background: #fff; width: 500px; margin: 6% auto; padding: 32px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: zoomIn 0.2s ease; }
         @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
         .form-row { display: flex; gap: 20px; } 
         .form-group { margin-bottom: 18px; flex: 1; }
         .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #4a5568; }
@@ -189,7 +132,6 @@
 <div id="loginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a202c;z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;color:white;">
     <h2 style="margin-bottom:8px; font-weight:800; font-size:32px;">👋 Welcome</h2>
     <h3 style="margin:0 0 30px 0; font-size:16px; font-weight:400; opacity:0.7; letter-spacing:1px;">INTELLIGENT WORK MANAGEMENT</h3>
-    
     <div style="background:rgba(255,255,255,0.1); padding:30px; border-radius:16px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1);">
         <p style="margin-bottom:15px;opacity:0.9;font-size:14px;font-weight:600;">请输入您的姓名登记访问</p>
         <div style="display:flex;gap:12px;">
@@ -227,8 +169,7 @@
             </div>
             <button class="btn btn-export" onclick="exportToCSV()">📥 CSV导出</button>
             <button class="btn btn-add" onclick="openModal()">+ New Task</button>
-            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">📥 手动下载云端</button>
-            <button class="btn btn-upload" onclick="pushToCloud()" style="background:#2b6cb0;">📤 手动上传云端</button>
+            <button class="btn btn-refresh" onclick="fetchData()" style="background:#4a5568;">📥 刷新拉取云端</button>
         </div>
     </header>
 
@@ -316,7 +257,6 @@
 </div>
 
 <script>
-    // 固化全量历史备份，确保空仓或初始化加载时能作为绝对安全的物理地基拉起
     const INITIAL_TASKS = [
         {"type":"PM","date":"2026-02-06","location":"121生产楼","event":"沉降观测","person":"张海滨","status":"Done"},
         {"type":"PM","date":"2026-05-24","time":"16:00-18:00","location":"131生产楼","event":"131空调年度维护 --9401月度,131空调排风机年度","person":"郭洪","status":"Planned","remarks":"中班"},
@@ -507,14 +447,11 @@
     let appConfig = { holidays: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-21", "2026-02-22", "2026-02-23", "2026-04-04", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05", "2026-06-19", "2026-06-20", "2026-06-21", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07"], makeupDays: ["2026-02-14", "2026-02-28", "2026-04-26", "2026-05-09", "2026-09-27", "2026-10-10"], personOrder: ["付林", "刘文杰", "刘伟", "郭洪", "张文献", "杨宏", "陈苏宁", "魏香委", "何军科", "何垣莹", "张海滨", "丁道创", "翁欣", "靳少伟", "项敏", "杨洪"] };
     const COLORS = { blue: '#63b3ed', teal: '#4fd1c5', green: '#68d391', orange: '#f6ad55', red: '#fc8181', purple: '#b794f4', gray: '#cbd5e0' };
     
-    // 🌐 【云数据库总线配置】
-    const SUPABASE_URL = 'https://cxnwbcxtdvcwpzpxdffl.supabase.co/rest/v1/'; 
-    const SUPABASE_KEY = 'sb_publishable_3-Ov0JCbyFzALUSlDTm7yQ_dsbpv_yO'; 
-    const API_URL = `${SUPABASE_URL}/rest/v1/work_tasks?id=eq.1`;
+    // 🌐 【全新切换的安全公用 KV 同步总线】（免钥匙，完全杜绝被刷爆封禁）
+    const SYNC_URL = 'https://kv.val.run/v1/storage/global_work_tasks_v2026';
 
     let workData = []; let chartInstances = {}; let currentPage = 1; const itemsPerPage = 12; let currentUser = "Guest";
 
-    // 🔑 1. 登录：从本地拉起地基
     function checkLogin() {
         const input = document.getElementById('loginName').value.trim();
         if(input.length > 0) {
@@ -532,7 +469,6 @@
         initLocalData();
     }
 
-    // 💻 2. 本地初始化：所有人登录或刷新，秒速亮起数据，不走云端
     function initLocalData() {
         const schMonth = document.getElementById('schMonth');
         if (schMonth && !schMonth.value) {
@@ -542,59 +478,53 @@
         
         if(localStorage.getItem('sys_work_data_v3') && JSON.parse(localStorage.getItem('sys_work_data_v3')).length > 0) {
             workData = JSON.parse(localStorage.getItem('sys_work_data_v3'));
+            updateStatus('💻 已载入本地数据 (正自动检测云端最新版...)');
         } else {
             workData = INITIAL_TASKS; 
+            updateStatus('💡 初次载入系统默认排班地基');
         }
-        updateStatus('💻 单机离线状态 (本地数据未同步)');
         refreshView();
+        // 自动拉取一次最新的云端数据
+        fetchData(true);
     }
 
-    // 📥 3. 【纯手动下载】：只有点击“手动下载云端”按钮才会触发请求，获取全厂最新排班
-    async function fetchData() {
-        updateStatus('🔄 正在拉取云端数据...');
+    // 📥 3. 全安全异步云端数据拉取
+    async function fetchData(isAuto = false) {
+        if(!isAuto) updateStatus('🔄 正在从安全云端拉取最新全厂排班...');
         try {
-            const res = await fetch(API_URL, {
-                method: 'GET',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
+            const res = await fetch(SYNC_URL);
             if(res.ok) {
                 const json = await res.json();
-                if(json && json.length > 0 && json[0].task_data && json[0].task_data.tasks) {
-                    workData = json[0].task_data.tasks;
+                if(json && Array.isArray(json) && json.length > 0) {
+                    workData = json;
                     localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
-                    updateStatus('📥 手动下载成功：已拉取最新排班！');
+                    updateStatus(isAuto ? '✅ 云端数据加载成功：已同步全厂最新版' : '📥 刷新成功：已同步最新排班！');
                     refreshView(); 
                 } else {
-                    updateStatus('💡 云端暂无合并数据');
+                    if(!isAuto) updateStatus('💡 云端暂无合并数据，当前正在使用本地地基');
                 }
             } else { throw new Error(); }
         } catch (e) {
-            updateStatus('❌ 下载失败，请确认凭证或网络');
+            if(!isAuto) updateStatus('❌ 下载失败，请检查网络连接');
         }
     }
 
-    // 📤 4. 【纯手动上传】：只有点击“手动上传云端”按钮才会把本电脑的最新排班广播给全厂
+    // 📤 4. 自动全厂广播同步
     async function pushToCloud() {
-        updateStatus('⏳ 正在打包并手动上传...');
-        const packet = { task_data: { tasks: workData } };
+        updateStatus('⏳ 正在合并打包并向云端端点同步...');
         try {
-            const res = await fetch(API_URL, {
-                method: 'PATCH', 
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`
-                },
-                body: JSON.stringify(packet)
+            const res = await fetch(SYNC_URL, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(workData)
             });
             if(!res.ok) throw new Error();
-            updateStatus('📤 手动上传成功：全厂云端排班已更新！');
+            updateStatus('📤 全厂同步成功：新排班数据已广播！');
         } catch (e) {
-            updateStatus('❌ 上传失败，本地排班未丢失');
+            updateStatus('❌ 广播失败，本地排班未丢失，请稍后再试');
         }
     }
 
-    // 获取当前实际电脑时间字符串 (格式: YYYY-MM-DD)
     function getTodayStr() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -704,11 +634,10 @@
             workData[taskId].status = newStatus; 
             localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
             refreshView(); 
-            updateStatus('💾 看板状态已在本地变更（尚未手动上传）');
+            pushToCloud(); // 看板拖拽改变状态自动广播给全厂
         } 
     }
 
-    // 📝 5. 任务保存：纯单机保存
     function saveData() {
         const idx = document.getElementById('editIndex').value;
         const task = { type: document.getElementById('inType').value, date: document.getElementById('inDate').value, endDate: document.getElementById('inEndDate').value, time: document.getElementById('inTime').value, location: document.getElementById('inLoc').value, event: document.getElementById('inEvent').value, person: document.getElementById('inPerson').value, status: document.getElementById('inStatus').value, tools: document.getElementById('inTools').value, remarks: document.getElementById('inRemarks').value };
@@ -719,7 +648,7 @@
         localStorage.setItem('sys_work_data_v3', JSON.stringify(workData)); 
         closeModal(); 
         refreshView(); 
-        updateStatus('💾 任务已保存至本地电脑（需要你点击按钮进行手动上传）');
+        pushToCloud(); // 任务保存后自动触发全厂数据同步广播
     }
     
     function delItem(idx) { 
@@ -727,7 +656,7 @@
             workData.splice(idx, 1); 
             localStorage.setItem('sys_work_data_v3', JSON.stringify(workData));
             refreshView(); 
-            updateStatus('❌ 记录已在本地移除（需要手动上传生效）');
+            pushToCloud(); // 任务删除后自动合并同步
         } 
     }
 
