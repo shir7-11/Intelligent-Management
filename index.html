@@ -524,25 +524,28 @@
         }
     }
 
-    // 📤 4. 全自动化云端广播同步（利用 PATCH 动态更新当前行）
-    async function pushToCloud() {
-        updateStatus('⏳ 本地已变动，正在同步至 Supabase 云端...');
-        try {
-            const res = await fetch(`${SUPABASE_URL}?key=eq.tasks`, {
-                method: 'PATCH', 
-                headers: {
-                    ...getSupabaseHeaders(),
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ value: workData })
-            });
-            if(!res.ok) throw new Error();
-            updateStatus('📤 云端同步成功：新排班状态已成功广播至全厂！');
-        } catch (e) {
-            updateStatus('❌ 自动同步失败，数据已安全保存在你本机浏览器缓存中');
-        }
+   // 📤 4. 全自动化云端广播同步（升级为无则创建、有则强行覆盖的强力 UPSERT 模式）
+async function pushToCloud() {
+    updateStatus('⏳ 本地已变动，正在同步至 Supabase 云端...');
+    try {
+        // 放弃容易静默失败的 PATCH，改用 POST + resolution=merge-duplicates 强行写入
+        const res = await fetch(SUPABASE_URL, {
+            method: 'POST', 
+            headers: {
+                ...getSupabaseHeaders(),
+                'Prefer': 'resolution=merge-duplicates, return=minimal' // 强力覆盖核心标识
+            },
+            body: JSON.stringify({ 
+                key: 'tasks', 
+                value: workData 
+            })
+        });
+        if(!res.ok) throw new Error();
+        updateStatus('📤 云端同步成功：新排班状态已成功广播至全厂！');
+    } catch (e) {
+        updateStatus('❌ 自动同步失败，数据已安全保存在你本机浏览器缓存中');
     }
-
+}
     function getTodayStr() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
